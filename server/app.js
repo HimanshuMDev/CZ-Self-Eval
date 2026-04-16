@@ -181,4 +181,12 @@ app.get('/api/stats', async (_req, res) => {
   }
 });
 
+// ─── Serve dashboard in production ───────────────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  const distDir = path.join(__dirname, '../dashboard/dist');
+  app.use(express.static(distDir));
+  app.get('*', (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
+}
+
 module.exports = app;
