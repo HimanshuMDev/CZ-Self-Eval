@@ -73,25 +73,10 @@ function fromClient(body) {
   return { sessionId: id, messages, ...rest };
 }
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
+// ─── Sessions Router (mounted at both /api/sessions and /api/arena/chat-sessions)
+const sessionsRouter = express.Router();
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
-
-app.get('/api/sessions', async (_req, res) => {
-  try {
-    const docs = await Session.find({}, { messages: 0 }).sort({ updatedAt: -1 }).lean();
-    const sessions = docs.map(d => {
-      const { sessionId, _id, ...rest } = d;
-      return { id: sessionId, ...rest };
-    });
-    res.json(sessions);
-  } catch (err) {
-    console.error('[GET /api/sessions]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/sessions/export/all', async (_req, res) => {
+sessionsRouter.get('/export/all', async (_req, res) => {
   try {
     const docs = await Session.find({}).sort({ updatedAt: -1 });
     res.json(docs.map(d => toClient(d, true)));
@@ -100,35 +85,32 @@ app.get('/api/sessions/export/all', async (_req, res) => {
   }
 });
 
-app.get('/api/sessions/:id', async (req, res) => {
+sessionsRouter.get('/', async (_req, res) => {
+  try {
+    const docs = await Session.find({}, { messages: 0 }).sort({ updatedAt: -1 }).lean();
+    const sessions = docs.map(d => {
+      const { sessionId, _id, ...rest } = d;
+      return { id: sessionId, ...rest };
+    });
+    res.json(sessions);
+  } catch (err) {
+    console.error('[GET /sessions]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+sessionsRouter.get('/:id', async (req, res) => {
   try {
     const doc = await Session.findOne({ sessionId: req.params.id });
     if (!doc) return res.status(404).json({ error: 'Session not found' });
     res.json(toClient(doc, true));
   } catch (err) {
-    console.error('[GET /api/sessions/:id]', err.message);
+    console.error('[GET /sessions/:id]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/sessions', async (req, res) => {
-  try {
-    const payload = fromClient(req.body);
-    if (!payload.sessionId) return res.status(400).json({ error: 'Session id is required' });
-
-    const doc = await Session.findOneAndUpdate(
-      { sessionId: payload.sessionId },
-      { $set: payload },
-      { upsert: true, new: true, runValidators: false }
-    );
-    res.json({ ok: true, id: doc.sessionId });
-  } catch (err) {
-    console.error('[POST /api/sessions]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/sessions/import', async (req, res) => {
+sessionsRouter.post('/import', async (req, res) => {
   try {
     const sessions = Array.isArray(req.body) ? req.body : [req.body];
     const results = [];
@@ -144,21 +126,46 @@ app.post('/api/sessions/import', async (req, res) => {
     }
     res.json({ ok: true, imported: results.length, ids: results });
   } catch (err) {
-    console.error('[POST /api/sessions/import]', err.message);
+    console.error('[POST /sessions/import]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.delete('/api/sessions/:id', async (req, res) => {
+sessionsRouter.post('/', async (req, res) => {
+  try {
+    const payload = fromClient(req.body);
+    if (!payload.sessionId) return res.status(400).json({ error: 'Session id is required' });
+
+    const doc = await Session.findOneAndUpdate(
+      { sessionId: payload.sessionId },
+      { $set: payload },
+      { upsert: true, new: true, runValidators: false }
+    );
+    res.json({ ok: true, id: doc.sessionId });
+  } catch (err) {
+    console.error('[POST /sessions]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+sessionsRouter.delete('/:id', async (req, res) => {
   try {
     const result = await Session.deleteOne({ sessionId: req.params.id });
     if (result.deletedCount === 0) return res.status(404).json({ error: 'Session not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('[DELETE /api/sessions/:id]', err.message);
+    console.error('[DELETE /sessions/:id]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+
+app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+
+// Mount sessions router at both paths so both local proxy and production work
+app.use('/api/sessions', sessionsRouter);
+app.use('/api/arena/chat-sessions', sessionsRouter);
 
 app.get('/api/stats', async (_req, res) => {
   try {
@@ -186,7 +193,8 @@ if (process.env.NODE_ENV === 'production') {
   const path = require('path');
   const distDir = path.join(__dirname, '../dashboard/dist');
   app.use(express.static(distDir));
-  app.get('*', (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
+  // Only fall back to index.html for non-API routes (SPA client-side routing)
+  app.get(/^(?!\/api\/)/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
 }
 
 module.exports = app;
