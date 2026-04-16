@@ -10,7 +10,10 @@ let mongoConnecting = null;
 module.exports = async (req, res) => {
   if (mongoose.connection.readyState < 1) {
     if (!mongoConnecting) {
-      mongoConnecting = mongoose.connect(MONGODB_URI)
+      mongoConnecting = mongoose.connect(MONGODB_URI, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
+      })
         .then(() => console.log('✅  MongoDB connected (serverless)'))
         .catch(err => {
           mongoConnecting = null; // reset so next request retries
