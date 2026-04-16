@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm install --prefix dashboard && npm run build --prefix dashboard",
+  "outputDirectory": "dashboard/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
