@@ -1,0 +1,19 @@
+{
+  "name": "self-eval",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"server,dashboard\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run dev --prefix server\" \"npm run dev --prefix dashboard\"",
+    "build": "npm install --prefix dashboard && npm run build --prefix dashboard",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix dashboard"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
