@@ -1,0 +1,791 @@
+[
+  {
+    "id": "chat_1776234022834_c6i36",
+    "title": "Manual Test - Apr 15, 2026",
+    "createdAt": "2026-04-15T06:20:30.189Z",
+    "updatedAt": "2026-04-15T07:28:45.678Z",
+    "from": "918000363019",
+    "totalMessages": 82,
+    "totalAgentMessages": 41,
+    "avgResponseTimeMs": 8809,
+    "agentTypesUsed": [
+      "orchestrator",
+      "faq",
+      "discovery",
+      "support",
+      "payment"
+    ],
+    "flags": {
+      "pass": 0,
+      "fail": 0,
+      "bug": 0,
+      "slow": 0
+    },
+    "messages": [
+      {
+        "id": "1776234030189",
+        "role": "user",
+        "content": "Hi",
+        "timestamp": "2026-04-15T06:20:30.189Z",
+        "flag": null
+      },
+      {
+        "id": "1776234030603",
+        "role": "agent",
+        "content": "User, ready to charge your EV?",
+        "timestamp": "2026-04-15T06:20:30.602Z",
+        "metadata": {
+          "agentType": "orchestrator",
+          "responseTimeMs": 400,
+          "buttons": [
+            {
+              "id": "find_chargers",
+              "title": "Find Chargers"
+            },
+            {
+              "id": "wallet",
+              "title": "Wallet"
+            }
+          ]
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234130287",
+        "role": "user",
+        "content": "what is CZ",
+        "timestamp": "2026-04-15T06:22:10.287Z",
+        "flag": null
+      },
+      {
+        "id": "1776234139200",
+        "role": "agent",
+        "content": "CZ refers to ChargeZone, your EV charging network.",
+        "timestamp": "2026-04-15T06:22:19.199Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 8901
+        },
+        "comment": "we can provide better context about cz.",
+        "flag": null
+      },
+      {
+        "id": "1776234269851",
+        "role": "user",
+        "content": "What kind of things can you do?",
+        "timestamp": "2026-04-15T06:24:29.851Z",
+        "flag": null
+      },
+      {
+        "id": "1776234282133",
+        "role": "agent",
+        "content": "I can help you find EV charging stations, get details about specific stations, and even plan routes with charging stops. I can also verify your user details. What can I help you with today?",
+        "timestamp": "2026-04-15T06:24:42.132Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 12264
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234357994",
+        "role": "user",
+        "content": "How many charging stations do you have?",
+        "timestamp": "2026-04-15T06:25:57.994Z",
+        "flag": null
+      },
+      {
+        "id": "1776234366805",
+        "role": "agent",
+        "content": "I don't have information on that yet. For further help, please contact su***@chargezone.in or ask me to raise a support ticket.",
+        "timestamp": "2026-04-15T06:26:06.804Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 8790
+        },
+        "comment": "i thing agent should give a number.",
+        "flag": null
+      },
+      {
+        "id": "1776234453854",
+        "role": "user",
+        "content": "which services provide by CZ agent?",
+        "timestamp": "2026-04-15T06:27:33.854Z",
+        "flag": null
+      },
+      {
+        "id": "1776234464021",
+        "role": "agent",
+        "content": "ChargeZone provides the following services:\n\n*   **EV Charging:** Access to a network of EV charging stations.\n*   **ChargeZone App:** For finding chargers, starting/stopping sessions, managing your wallet, and viewing transaction history.\n*   **ChargeClub Loyalty Program:** Tiered membership with benefits like bonus ChargeCoins, priority access, and free reservations.\n*   **ChargeCoins:** Loyalty rewards that can be redeemed for wallet credits.\n*   **RFID Cards:** For convenient tap-to-charge sessions.\n*   **Payment Options:** Support for UPI, Credit/Debit cards, and Net banking.\n*   **Customer Support:** 24/7 support via email, WhatsApp, and dedicated lines for Platinum members.",
+        "timestamp": "2026-04-15T06:27:44.020Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 10149
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234559985",
+        "role": "user",
+        "content": "I’ve never used the ChargeZone app before—can you guide me on how to use it?",
+        "timestamp": "2026-04-15T06:29:19.985Z",
+        "flag": null
+      },
+      {
+        "id": "1776234573992",
+        "role": "agent",
+        "content": "Here's a guide on how to use the ChargeZone app:\n\n1.  **Download the App:**\n    *   Search \"ChargeZone\" on Google Play Store (Android) or Apple App Store (iOS).\n2.  **Register / Create an Account:**\n    *   Open the app and tap **Sign Up**.\n    *   Enter your mobile number, verify with OTP, and fill in your details.\n    *   You'll get a ₹50 welcome bonus.\n3.  **Find a Nearby Charger:**\n    *   Tap **Find Charger** on the home screen.\n    *   Allow location access or type a location.\n    *   Browse the map for available (green pins) or busy (red pins) stations.\n    *   Tap a pin for details like connector types and tariff.\n4.  **Start a Charging Session:**\n    *   **QR Code:** Tap **Scan QR** in the app and scan the code on the charger.\n    *   **Charger ID:** Tap **Enter Charger ID** and type the ID from the unit.\n    *   **RFID Card:** Tap your registered RFID card on the charger reader (ensure wallet balance is above ₹100).\n    *   Select the connector and confirm to start.\n5.  **Stop a Charging Session:**\n    *   **App:** Go to **Active Session** and tap **Stop Charging**.\n    *   **RFID:** Tap your RFID card on the reader again.\n    *   The session also stops automatically when your vehicle is full or wallet runs low.\n6.  **Add Money to Your Wallet:**\n    *   Open the app, tap **Wallet**.\n    *   Tap **Add Money**, enter the amount (minimum ₹100).\n    *   Select your payment method (UPI, Credit/Debit Card, Net Banking).\n7.  **View Transaction History:**\n    *   Go to **Wallet** → **Transaction History**.\n    *   You can filter and view detailed invoices.\n\nFor finding chargers or stations, please note: \nFor booking, starting/stopping a session, session status, please note:\n\nI can only help with finding EV chargers, station details, and directions. What location do you need?",
+        "timestamp": "2026-04-15T06:29:33.991Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 13990
+        },
+        "comment": "we should provide app url as well.",
+        "flag": null
+      },
+      {
+        "id": "1776234689854",
+        "role": "user",
+        "content": "The information you provided wasn’t helpful.",
+        "timestamp": "2026-04-15T06:31:29.854Z",
+        "flag": null
+      },
+      {
+        "id": "1776234697758",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T06:31:37.757Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 7884
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234789759",
+        "role": "user",
+        "content": "Do I need to create an account to use ChargeZone?",
+        "timestamp": "2026-04-15T06:33:09.759Z",
+        "flag": null
+      },
+      {
+        "id": "1776234797793",
+        "role": "agent",
+        "content": "Yes, you do need to create an account to use ChargeZone.\n\nHere are the steps to get started:\n1.  **Download the ChargeZone app** from your app store.\n2.  **Register** using your phone number and complete the OTP verification.\n\nOnce you're registered, I can help you find a charger near you or assist with other services!",
+        "timestamp": "2026-04-15T06:33:17.792Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 8015
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234814104",
+        "role": "user",
+        "content": "How do I set up my profile on the app?",
+        "timestamp": "2026-04-15T06:33:34.104Z",
+        "flag": null
+      },
+      {
+        "id": "1776234824331",
+        "role": "agent",
+        "content": "You're already registered with ChargeZone! To set up or update your profile details like your name or email in the app, please follow these steps:\n\n1.  Open the ChargeZone app.\n2.  Go to the **Profile** section.\n3.  Tap on **Edit Profile**.\n4.  You can then update your name, email, and other personal information.",
+        "timestamp": "2026-04-15T06:33:44.330Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 10207
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234837300",
+        "role": "user",
+        "content": "Can I track my charging history?",
+        "timestamp": "2026-04-15T06:33:57.300Z",
+        "flag": null
+      },
+      {
+        "id": "1776234844251",
+        "role": "agent",
+        "content": "No transactions found on your account yet.",
+        "timestamp": "2026-04-15T06:34:04.250Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 6937
+        },
+        "comment": "",
+        "flag": null
+      },
+      {
+        "id": "1776234923715",
+        "role": "user",
+        "content": "Can I track my charging history mobile app?",
+        "timestamp": "2026-04-15T06:35:23.715Z",
+        "flag": null
+      },
+      {
+        "id": "1776234936817",
+        "role": "agent",
+        "content": "Yes, you can absolutely track your charging history in the ChargeZone mobile app!\n\nYou'll find your past charging sessions and details under the **\"My Bookings\"** or **\"History\"** section in the app. Since you haven't made any transactions yet, it will be empty for now, but it will populate as you start charging.",
+        "timestamp": "2026-04-15T06:35:36.816Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 13085
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234968092",
+        "role": "user",
+        "content": "What types of chargers do you have — AC or DC?",
+        "timestamp": "2026-04-15T06:36:08.092Z",
+        "flag": null
+      },
+      {
+        "id": "1776234976362",
+        "role": "agent",
+        "content": "ChargeZone supports both AC and DC chargers.\n\n**AC Connectors:**\n*   Type 1 (J1772)\n*   Type 2 (Mennekes)\n*   Bharat AC-001 (3.3 kW)\n\n**DC Connectors:**\n*   CCS2\n*   CHAdeMO\n*   Bharat DC-001 (15 kW)",
+        "timestamp": "2026-04-15T06:36:16.361Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 8257
+        },
+        "flag": null
+      },
+      {
+        "id": "1776234993607",
+        "role": "user",
+        "content": "Are your stations compatible with all EV brands?",
+        "timestamp": "2026-04-15T06:36:33.607Z",
+        "flag": null
+      },
+      {
+        "id": "1776235003026",
+        "role": "agent",
+        "content": "ChargeZone stations support a variety of connector types for four-wheeler EVs:\n\n**AC Connectors:**\n*   Type 1 (J1772)\n*   Type 2 (Mennekes)\n*   Bharat AC-001 (3.3 kW)\n\n**DC Connectors:**\n*   CCS2\n*   CHAdeMO\n*   Bharat DC-001 (15 kW)\n\nChargeZone stations currently support four-wheeler EVs only. Two-wheelers, three-wheelers, and e-rickshaws are not supported.",
+        "timestamp": "2026-04-15T06:36:43.025Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 9402
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235036191",
+        "role": "user",
+        "content": "Are your stations compatible with all  car EV brands?",
+        "timestamp": "2026-04-15T06:37:16.191Z",
+        "flag": null
+      },
+      {
+        "id": "1776235045680",
+        "role": "agent",
+        "content": "ChargeZone stations support various connector types for four-wheeler EVs:\n\n**AC Connectors:**\n*   Type 1 (J1772)\n*   Type 2 (Mennekes)\n*   Bharat AC-001 (3.3 kW)\n\n**DC Connectors:**\n*   CCS2\n*   CHAdeMO\n*   Bharat DC-001 (15 kW)\n\nPlease check your car's charging port to ensure it matches one of these supported connector types. ChargeZone stations currently support four-wheeler EVs only.",
+        "timestamp": "2026-04-15T06:37:25.679Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 9472
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235068593",
+        "role": "user",
+        "content": "Are stations available 24/7?",
+        "timestamp": "2026-04-15T06:37:48.593Z",
+        "flag": null
+      },
+      {
+        "id": "1776235076959",
+        "role": "agent",
+        "content": "I don't have information on that yet. For further help, please contact su***@chargezone.in or ask me to raise a support ticket.",
+        "timestamp": "2026-04-15T06:37:56.958Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 8346
+        },
+        "comment": "I think we can provide information about overall station availability.",
+        "flag": null
+      },
+      {
+        "id": "1776235133560",
+        "role": "user",
+        "content": "How do I pay for charging?",
+        "timestamp": "2026-04-15T06:38:53.560Z",
+        "flag": null
+      },
+      {
+        "id": "1776235141781",
+        "role": "agent",
+        "content": "You can pay for charging by adding money to your ChargeZone wallet. Supported payment methods include UPI (GPay, PhonePe, Paytm, BHIM), Credit cards, Debit cards, and Net banking.",
+        "timestamp": "2026-04-15T06:39:01.780Z",
+        "metadata": {
+          "agentType": "faq",
+          "responseTimeMs": 8210
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235161503",
+        "role": "user",
+        "content": "How do I get an invoice for my charging session?",
+        "timestamp": "2026-04-15T06:39:21.503Z",
+        "flag": null
+      },
+      {
+        "id": "1776235169448",
+        "role": "agent",
+        "content": "No completed charging sessions with invoices found on your account yet.",
+        "timestamp": "2026-04-15T06:39:29.447Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 7928
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235280829",
+        "role": "user",
+        "content": "How do I get an invoice for my charging session in app?",
+        "timestamp": "2026-04-15T06:41:20.829Z",
+        "flag": null
+      },
+      {
+        "id": "1776235289652",
+        "role": "agent",
+        "content": "No completed charging sessions with invoices found on your account yet.",
+        "timestamp": "2026-04-15T06:41:29.651Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 8810
+        },
+        "comment": "He didn’t provide the app steps. He should have called the FAQ agent.",
+        "flag": null
+      },
+      {
+        "id": "1776235375502",
+        "role": "user",
+        "content": "My charging session is not starting — what do I do?",
+        "timestamp": "2026-04-15T06:42:55.502Z",
+        "flag": null
+      },
+      {
+        "id": "1776235386155",
+        "role": "agent",
+        "content": "I'm sorry to hear your charging session isn't starting. Here are some steps you can try:\n\n1.  Ensure your booking is confirmed and shows \"Scheduled\" or \"In Progress\" status.\n2.  Check that the connector is firmly plugged into your vehicle — you should hear/feel a click.\n3.  Confirm the charger display shows your session (some chargers show a green light or \"Charging\" text).\n4.  Wait up to 2 minutes after booking — some chargers have a start-up delay.\n5.  Try unplugging and re-plugging the connector once.\n6.  If the charger has a physical start button, press it once after plugging in.\n7.  If still not starting after 5 minutes, report the charger as faulty via the app or contact support.\n\nIf these steps don't resolve the issue, I can help you create a ticket for our support team to investigate further.",
+        "timestamp": "2026-04-15T06:43:06.154Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 10638
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235411738",
+        "role": "user",
+        "content": "thanks now it's works",
+        "timestamp": "2026-04-15T06:43:31.738Z",
+        "flag": null
+      },
+      {
+        "id": "1776235423222",
+        "role": "agent",
+        "content": "You're most welcome! Glad to hear it's working now.\n\nIs there anything else I can help you with today, like finding another charging station or checking details for a specific one?",
+        "timestamp": "2026-04-15T06:43:43.221Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 11463
+        },
+        "flag": null
+      },
+      {
+        "id": "1776235472838",
+        "role": "user",
+        "content": "How fast will my car charge?",
+        "timestamp": "2026-04-15T06:44:32.838Z",
+        "flag": null
+      },
+      {
+        "id": "1776235487458",
+        "role": "agent",
+        "content": "The charging speed depends on several factors, including your car's maximum charging rate, the charger's power output, and your car's current battery level.\n\nTo give you a general idea, here's how a charging session typically works:\n\n1.  Open WhatsApp and enter the Charger ID shown on the station.\n2.  Select the charger and choose the amount/booking type.\n3.  Confirm payment to create the booking.\n4.  Connect the cable to your EV and enter the OTP on the charger display.\n5.  Charging begins automatically after OTP verification.\n\nIf you'd like to know the specific charging speed for a particular charger, I can help you find nearby chargers. Would you like me to do that?",
+        "timestamp": "2026-04-15T06:44:47.457Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 14603
+        },
+        "comment": "i think here charging session detail not helpfull.",
+        "flag": null
+      },
+      {
+        "id": "1776235971036",
+        "role": "user",
+        "content": "The station is showing unavailable but it looks free",
+        "timestamp": "2026-04-15T06:52:51.036Z",
+        "flag": null
+      },
+      {
+        "id": "1776235982581",
+        "role": "agent",
+        "content": "I understand that can be frustrating when a charger appears free but shows as unavailable. This can happen for a few reasons, such as a temporary communication issue with the charger, or it might be reserved for another user.\n\nHere are some general troubleshooting steps that might help, similar to when a session isn't starting:\n\n1.  **Check the charger display:** Sometimes the charger itself might show a different status or an error code.\n2.  **Try another connector:** If the station has multiple connectors, try a different one if available.\n3.  **Restart the app:** Close and reopen the ChargeZone app to refresh the status.\n4.  **Wait a few minutes:** There might be a slight delay in the status update.\n\nIf the station continues to show as unavailable, it's possible there's an issue with that specific charger. Would you like me to create a support ticket for you so our team can investigate this charger's status?",
+        "timestamp": "2026-04-15T06:53:02.580Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 11526
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236027035",
+        "role": "user",
+        "content": "I plugged in but charging didn't start",
+        "timestamp": "2026-04-15T06:53:47.035Z",
+        "flag": null
+      },
+      {
+        "id": "1776236037460",
+        "role": "agent",
+        "content": "I'm sorry to hear that your charging session didn't start after you plugged in. That can definitely be frustrating.\n\nHere are some steps you can try to get it working:\n\n1.  **Ensure your booking is confirmed** and shows \"Scheduled\" or \"In Progress\" status in your app.\n2.  **Check that the connector is firmly plugged into your vehicle** — you should hear or feel a click.\n3.  **Confirm the charger display shows your session** (some chargers show a green light or \"Charging\" text).\n4.  **Wait up to 2 minutes** after booking — some chargers have a start-up delay.\n5.  **Try unplugging and re-plugging the connector once.**\n6.  **If the charger has a physical start button, press it once** after plugging in.\n7.  **Make sure your vehicle is in \"Ready to Charge\" mode** (not in Drive or accessory mode).\n\nIf it's still not starting after trying these steps for 5 minutes, please let me know. I can then help you report the charger as faulty or create an escalation ticket for you to get human assistance.",
+        "timestamp": "2026-04-15T06:53:57.459Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 10402
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236052522",
+        "role": "user",
+        "content": "My car is not being detected by the charger",
+        "timestamp": "2026-04-15T06:54:12.522Z",
+        "flag": null
+      },
+      {
+        "id": "1776236061278",
+        "role": "agent",
+        "content": "I'm sorry to hear that your car isn't being detected by the charger. That can be quite frustrating.\n\nHere are the troubleshooting steps that often help in such situations:\n\n1.  **Ensure your booking is confirmed** and shows \"Scheduled\" or \"In Progress\" status.\n2.  **Check that the connector is firmly plugged into your vehicle** — you should hear or feel a click.\n3.  **Confirm the charger display shows your session** (some chargers show a green light or \"Charging\" text).\n4.  **Wait up to 2 minutes** after booking — some chargers have a start-up delay.\n5.  **Try unplugging and re-plugging the connector once.**\n6.  **If the charger has a physical start button, press it once** after plugging in.\n7.  **Make sure your vehicle is in \"Ready to Charge\" mode** (not in Drive or accessory mode).\n\nIf it's still not detecting your car after trying these steps for about 5 minutes, please let me know. I can then help you report the charger as faulty or create an escalation ticket for you to get human assistance.",
+        "timestamp": "2026-04-15T06:54:21.277Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 8741
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236227873",
+        "role": "user",
+        "content": "How do I change my registered phone number?",
+        "timestamp": "2026-04-15T06:57:07.873Z",
+        "flag": null
+      },
+      {
+        "id": "1776236236795",
+        "role": "agent",
+        "content": "Please tell me what you would like to change. For example, are you looking to change your:\n\n*   Account details (name, email)?\n*   Default vehicle?\n*   RFID card status?\n*   Autocharge settings?",
+        "timestamp": "2026-04-15T06:57:16.794Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 8907
+        },
+        "comment": "I already asked how to change my registered phone number—why did the agent ask again about changing it?",
+        "flag": null
+      },
+      {
+        "id": "1776236306125",
+        "role": "user",
+        "content": "i want chagne phone number",
+        "timestamp": "2026-04-15T06:58:26.125Z",
+        "flag": null
+      },
+      {
+        "id": "1776236317381",
+        "role": "agent",
+        "content": "I understand you want to change your registered phone number. Currently, I can't directly change your phone number for security reasons. This requires assistance from our support team.\n\nWould you like me to create an escalation ticket for you so a human agent can help you with this? They will contact you to verify your identity and assist with the change.",
+        "timestamp": "2026-04-15T06:58:37.380Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 11243
+        },
+        "comment": "Then it should deny the request when I ask, “How do I change my registered phone number?” for better clarity.",
+        "flag": null
+      },
+      {
+        "id": "1776236379494",
+        "role": "user",
+        "content": "How do I contact ChargeZone support?",
+        "timestamp": "2026-04-15T06:59:39.494Z",
+        "flag": null
+      },
+      {
+        "id": "1776236383549",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T06:59:43.548Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 4042
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236406640",
+        "role": "user",
+        "content": "I can't wait for 7m. give me direct contact.",
+        "timestamp": "2026-04-15T07:00:06.640Z",
+        "flag": null
+      },
+      {
+        "id": "1776236409933",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T07:00:09.932Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 3280
+        },
+        "comment": "I said, “I can’t wait for 7 minutes—give me a direct contact,” but the agent still gave the same response.",
+        "flag": null
+      },
+      {
+        "id": "1776236455335",
+        "role": "user",
+        "content": "Can I use one account on multiple vehicles?",
+        "timestamp": "2026-04-15T07:00:55.335Z",
+        "flag": null
+      },
+      {
+        "id": "1776236465082",
+        "role": "agent",
+        "content": "Yes, you can absolutely use one ChargeZone account for multiple vehicles! You can add all your electric vehicles to a single account and manage them there.\n\nWould you like to add another vehicle to your account?",
+        "timestamp": "2026-04-15T07:01:05.081Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 9727
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236490345",
+        "role": "user",
+        "content": "How do I delete my ChargeZone account?",
+        "timestamp": "2026-04-15T07:01:30.345Z",
+        "flag": null
+      },
+      {
+        "id": "1776236500692",
+        "role": "agent",
+        "content": "I understand you're asking about deleting your ChargeZone account. While I can't directly delete it for you, I can create a support ticket so a human agent can assist you with this process.\n\nWould you like me to create an escalation ticket for account deletion?",
+        "timestamp": "2026-04-15T07:01:40.691Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 10322
+        },
+        "flag": null
+      },
+      {
+        "id": "1776236566133",
+        "role": "user",
+        "content": "My wallet shows ₹0 but I just recharged ₹500, where did it go?",
+        "timestamp": "2026-04-15T07:02:46.133Z",
+        "flag": null
+      },
+      {
+        "id": "1776236572852",
+        "role": "agent",
+        "content": "Your wallet balance is ₹0.00.",
+        "timestamp": "2026-04-15T07:02:52.851Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 6703
+        },
+        "comment": "I was asked, “My wallet shows ₹0 but I just recharged ₹500—where did it go?” but the agent only showed the balance instead of helping.",
+        "flag": null
+      },
+      {
+        "id": "1776236877902",
+        "role": "user",
+        "content": "The payment failed but amount was debited from my bank account",
+        "timestamp": "2026-04-15T07:07:57.902Z",
+        "flag": null
+      },
+      {
+        "id": "1776236884496",
+        "role": "agent",
+        "content": "I can help with your wallet balance, transaction history, or topping up your wallet. What would you like to do?",
+        "timestamp": "2026-04-15T07:08:04.495Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 6567
+        },
+        "comment": "The answer to my question wasn’t helpful—I needed help with my issue.",
+        "flag": null
+      },
+      {
+        "id": "1776237003552",
+        "role": "user",
+        "content": "How long does a refund take to reflect in my account?",
+        "timestamp": "2026-04-15T07:10:03.552Z",
+        "flag": null
+      },
+      {
+        "id": "1776237010115",
+        "role": "agent",
+        "content": "How much would you like to add to your wallet? (minimum ₹100)",
+        "timestamp": "2026-04-15T07:10:10.114Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 6551
+        },
+        "comment": "The answer was completely out of context.",
+        "flag": null
+      },
+      {
+        "id": "1776237059621",
+        "role": "user",
+        "content": "I paid via UPI but the transaction is showing pending since 2 hours",
+        "timestamp": "2026-04-15T07:10:59.621Z",
+        "flag": null
+      },
+      {
+        "id": "1776237065882",
+        "role": "agent",
+        "content": "The minimum top-up amount is ₹100. How much would you like to add?",
+        "timestamp": "2026-04-15T07:11:05.881Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 6249
+        },
+        "comment": "The answer was completely out of context.",
+        "flag": null
+      },
+      {
+        "id": "1776237081722",
+        "role": "user",
+        "content": "The answer was completely out of context.",
+        "timestamp": "2026-04-15T07:11:21.722Z",
+        "flag": null
+      },
+      {
+        "id": "1776237089025",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T07:11:29.024Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 7287
+        },
+        "flag": null
+      },
+      {
+        "id": "1776237105598",
+        "role": "user",
+        "content": "Can I get a GST invoice for my last 3 sessions?",
+        "timestamp": "2026-04-15T07:11:45.598Z",
+        "flag": null
+      },
+      {
+        "id": "1776237114525",
+        "role": "agent",
+        "content": "No completed charging sessions with invoices found on your account yet.",
+        "timestamp": "2026-04-15T07:11:54.524Z",
+        "metadata": {
+          "agentType": "payment",
+          "responseTimeMs": 8913
+        },
+        "flag": null
+      },
+      {
+        "id": "1776237129217",
+        "role": "user",
+        "content": "The gun is stuck and not coming out of my car's port",
+        "timestamp": "2026-04-15T07:12:09.217Z",
+        "flag": null
+      },
+      {
+        "id": "1776237141047",
+        "role": "agent",
+        "content": "It sounds like the charging connector is stuck in your car's port. This can be frustrating, but please do not force it, as this can damage both your car and the charger.\n\nHere are some steps you can try:\n\n1.  **Confirm your vehicle's inlet type** (CCS2, CHAdeMO, Type 2, GB/T, etc.) from your vehicle manual or app.\n2.  **Check the charger's connector type labels** — most chargers have multiple connectors (AC and DC).\n3.  **Try a different connector port** on the same charger if available.\n4.  If no compatible connector is available, **use the ChargeZone app to find a nearby station** with your connector type.\n5.  **Do NOT force the connector** — this can damage both the charger and your vehicle.\n\nIf the gun is still stuck after trying these steps, I can escalate this to a human agent for further assistance. Would you like me to do that?",
+        "timestamp": "2026-04-15T07:12:21.046Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 11816
+        },
+        "flag": null
+      },
+      {
+        "id": "1776237175868",
+        "role": "user",
+        "content": "yes",
+        "timestamp": "2026-04-15T07:12:55.868Z",
+        "flag": null
+      },
+      {
+        "id": "1776237180221",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T07:13:00.220Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 4334
+        },
+        "flag": null
+      },
+      {
+        "id": "1776237228351",
+        "role": "user",
+        "content": "I can contact the station support team directly—I don’t have time to wait.",
+        "timestamp": "2026-04-15T07:13:48.351Z",
+        "flag": null
+      },
+      {
+        "id": "1776237233235",
+        "role": "agent",
+        "content": "Connecting you to a ChargeZone support agent. Estimated wait is about 7 minutes. I have shared our conversation so you will not need to repeat anything.",
+        "timestamp": "2026-04-15T07:13:53.234Z",
+        "metadata": {
+          "agentType": "support",
+          "responseTimeMs": 4854
+        },
+        "comment": "I first asked, “The gun is stuck and not coming out of my car’s port.” The agent replied, “If the gun is still stuck after trying these steps, I can escalate this to a human agent for further assistance. Would you like me to do that?” Then I said, “I can contact the station support team directly—I don’t have time to wait,” but it still gave the same response.",
+        "flag": null
+      },
+      {
+        "id": "1776237433557",
+        "role": "user",
+        "content": "I can see the station on the map but when I reach there it doesn't exist",
+        "timestamp": "2026-04-15T07:17:13.557Z",
+        "flag": null
+      },
+      {
+        "id": "1776237445424",
+        "role": "agent",
+        "content": "I understand that the station shown on the map is not at the correct location. I'll pass this on to the right team.\n\nOh no, that's really frustrating! I'm sorry you experienced that. It sounds like there might be an issue with the station's listing.\n\nI can help you by reporting this to our support team so they can investigate and correct the information. Would you like me to do that for you right now?",
+        "timestamp": "2026-04-15T07:17:25.423Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 11848
+        },
+        "flag": null
+      },
+      {
+        "id": "1776237491198",
+        "role": "user",
+        "content": "My car battery is 5% what should i do now.",
+        "timestamp": "2026-04-15T07:18:11.198Z",
+        "flag": null
+      },
+      {
+        "id": "1776237501329",
+        "role": "agent",
+        "content": "Oh no, 5% is really low! Don't worry, I'll help you find a charger quickly.\n\nCould you please share your current location, or tell me which city and area you're in? That way, I can find the nearest ChargeZone stations for you right away.",
+        "timestamp": "2026-04-15T07:18:21.328Z",
+        "metadata": {
+          "agentType": "discovery",
+          "responseTimeMs": 10116
+        },
+        "comment": "",
+        "flag": null
+      }
+    ]
+  }
+]

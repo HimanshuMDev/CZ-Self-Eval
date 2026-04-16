@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ───────────────────────────────────────────────────────── */
+@theme {
+  --color-background:     #F5F5F7;
+  --color-surface:        #FFFFFF;
+  --color-primary:        #F97316;
+  --color-primary-dark:   #EA580C;
+  --color-primary-light:  #FFF7ED;
+  --color-secondary:      #10B981;
+  --color-accent:         #F59E0B;
+  --color-border:         #E2E8F0;
+  --color-muted:          #94A3B8;
+  --font-sans: "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+@layer base {
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: var(--color-background);
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  ::selection {
+    background-color: rgba(249, 115, 22, 0.12);
+    color: #EA580C;
+  }
+}
+
+/* ─── Glass (light-mode) ──────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.glass-subtle {
+  background: rgba(245, 245, 247, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.glass-bg {
+  background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* ─── Glow ────────────────────────────────────────────────────────────────── */
+.glow {
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.22);
+}
+.glow-sm {
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar        { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track  { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb  { background: #CBD5E1; border-radius: 9999px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+.card {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+
+/* ─── Btn ─────────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: #F97316;
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(249,115,22,0.25);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover  { background: #EA580C; box-shadow: 0 4px 14px rgba(249,115,22,0.30); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  background: #F5F5F7;
+  color: #374151;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  transition: background 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.btn-secondary:hover { background: #EBEBED; border-color: #D1D5DB; }
+
+/* ─── Input ───────────────────────────────────────────────────────────────── */
+.input {
+  background: #FAFAFA;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #0F172A;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.input:focus {
+  border-color: rgba(249,115,22,0.5);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+}
+.input::placeholder { color: #94A3B8; }
+
+/* ─── Badge ───────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+/* ─── Divider ─────────────────────────────────────────────────────────────── */
+.divider { height: 1px; background: #E2E8F0; }
+
+/* ─── Sidebar nav active indicator ───────────────────────────────────────── */
+.nav-active-dot {
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: #F97316;
+  border-radius: 3px 0 0 3px;
+}
