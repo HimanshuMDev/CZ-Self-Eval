@@ -353,10 +353,15 @@ const EvidenceView: React.FC = () => {
 
         {/* ── Category Filter ── */}
         <div className="flex flex-wrap gap-2">
-          {([['all', 'All', null]] as const).concat(
-            (Object.entries(CATEGORY_CONFIG) as [LocalEvidence['category'], typeof CATEGORY_CONFIG[LocalEvidence['category']]][])
-              .map(([cat, cfg]) => [cat, cfg.label, cfg] as const)
-          ).map(([cat, label, cfg]) => {
+          {(() => {
+            type CfgEntry = [FilterCategory, string, typeof CATEGORY_CONFIG[LocalEvidence['category']] | null];
+            const entries: CfgEntry[] = [
+              ['all', 'All', null],
+              ...(Object.entries(CATEGORY_CONFIG) as [LocalEvidence['category'], typeof CATEGORY_CONFIG[LocalEvidence['category']]][])
+                .map(([cat, cfg]): CfgEntry => [cat, cfg.label, cfg]),
+            ];
+            return entries;
+          })().map(([cat, label, cfg]) => {
             const count  = cat === 'all' ? allItems.length : (categoryCounts[cat] || 0);
             const active = activeFilter === cat;
             return (

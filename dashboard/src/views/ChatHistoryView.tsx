@@ -2140,7 +2140,7 @@ const ChatHistoryView: React.FC = () => {
 
   // ── Single compare pass — returns raw entries ──────────────────────────────
   const runSinglePass = useCallback(async (
-    session: ChatSession,
+    _session: ChatSession,
     turns: Array<{ user: ChatMessageRecord; agent?: ChatMessageRecord }>,
     from: string,
     jobId: string,

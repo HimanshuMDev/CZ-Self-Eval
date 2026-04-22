@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Send, Bot, User,
   MapPin, Shield, Zap,
@@ -327,7 +327,6 @@ const ProfilePickerModal: React.FC<{
     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-4 pt-1 pb-2">Test User Profile</p>
     {(Object.keys(USER_PROFILES) as ProfileKey[]).map(key => {
       const p = USER_PROFILES[key];
-      const pal = PROFILE_PALETTE[p.colorKey];
       const active = profileKey === key;
       return (
         <button

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
 type ViewType = 'arena' | 'chat' | 'evidence' | 'history' | 'sandbox' | 'chat-history' | 'eval-review' | 'metrics';
 

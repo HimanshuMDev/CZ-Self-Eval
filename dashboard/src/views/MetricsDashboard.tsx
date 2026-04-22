@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TrendingUp, TrendingDown, Activity, Zap, Shield, Bug,
+  TrendingUp, TrendingDown, Activity, Shield,
   CheckCircle2, XCircle, Clock, AlertTriangle, BarChart2,
   RefreshCw, Loader2, Flame,
 } from 'lucide-react';
@@ -219,7 +219,6 @@ const MetricsDashboard: React.FC = () => {
   if (!metrics) return null;
   const m = metrics;
 
-  const sessionDayValues = Object.values(m.sessionsByDay);
   const passRateDayValues = Object.entries(m.passRateByDay)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, v]) => v.total > 0 ? Math.round((v.pass / v.total) * 100) : 0);
