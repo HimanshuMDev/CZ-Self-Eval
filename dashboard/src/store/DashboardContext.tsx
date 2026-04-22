@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-type ViewType = 'arena' | 'chat' | 'evidence' | 'history' | 'sandbox' | 'chat-history' | 'eval-review' | 'metrics';
+type ViewType = 'arena' | 'chat' | 'evidence' | 'history' | 'sandbox' | 'chat-history' | 'eval-review' | 'metrics' | 'golden';
 
 /** A single question in the Questions Lab pool */
 export interface LabQuestion {

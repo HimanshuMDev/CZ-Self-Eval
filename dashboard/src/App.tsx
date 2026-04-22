@@ -8,6 +8,7 @@ import ManualChatView from './views/ManualChatView';
 import ChatHistoryView from './views/ChatHistoryView';
 import EvalReviewView from './views/EvalReviewView';
 import MetricsDashboard from './views/MetricsDashboard';
+import GoldenSetView from './views/GoldenSetView';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { useRef } from 'react';
@@ -21,6 +22,7 @@ const VIEW_LABELS: Record<string, { title: string; sub: string; emoji: string }>
   evidence:       { title: 'Evidence Library',     sub: 'Known failing traces from LangSmith',   emoji: '🛡️' },
   metrics:        { title: 'Metrics Dashboard',    sub: 'Health scores, trends & analytics',     emoji: '📈' },
   history:        { title: 'Session History',      sub: 'Evaluation trajectory & scores',        emoji: '📊' },
+  golden:         { title: 'Golden Set',            sub: 'Locked baseline scenarios · CI gate',   emoji: '🏆' },
 };
 
 const ViewSwitcher = () => {
@@ -41,6 +43,7 @@ const ViewSwitcher = () => {
     case 'metrics':      return <MetricsDashboard />;
     case 'history':      return <HistoryView />;
     case 'sandbox':      return <SandboxView onStartScenario={handleStartScenario} />;
+    case 'golden':       return <GoldenSetView />;
     default:             return <ArenaView ref={arenaRef} />;
   }
 };

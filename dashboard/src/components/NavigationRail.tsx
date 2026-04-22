@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Shield, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp } from 'lucide-react';
+import { Layout, Shield, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp, Award } from 'lucide-react';
 import { useDashboard } from '../store/DashboardContext';
 
 const NavigationRail: React.FC = () => {
@@ -13,6 +13,7 @@ const NavigationRail: React.FC = () => {
         { id: 'chat',         icon: MessageCircle,label: 'Live Chat',       desc: 'Real-time chat test' },
         { id: 'chat-history', icon: ClipboardList, label: 'Chat History',  desc: 'Review sessions' },
         { id: 'eval-review',  icon: BarChart2,    label: 'Eval Review',    desc: 'All flags & comments' },
+        { id: 'golden',       icon: Award,        label: 'Golden Set',     desc: 'Locked baseline · CI' },
       ]
     },
     {

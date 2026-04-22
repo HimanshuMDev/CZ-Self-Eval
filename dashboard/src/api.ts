@@ -376,3 +376,154 @@ export const llmJudge = async (testMessage: string, botResponse: string, success
   if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
   return await res.json() as { pass: boolean; score: number; reason: string; detail?: string; method: string };
 };
+
+// ─── Golden Set ───────────────────────────────────────────────────────────────
+
+export type GoldenLanguage = 'English' | 'Hindi' | 'Hinglish';
+export type GoldenSubAgent = 'discovery' | 'session' | 'payment' | 'support' | 'faq' | null;
+
+export interface GoldenScenario {
+  id: string;
+  title: string;
+  description: string;
+  language: GoldenLanguage;
+  expectedSubAgent: GoldenSubAgent;
+  initialMessage: string;
+  expectedAnswer: string;
+  passKeywords: string[];
+  failKeywords: string[];
+  tags: string[];
+  mustPass: boolean;
+  minScore: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoldenRun {
+  index: number;
+  pass: boolean;
+  score: number;
+  reason: string;
+  responseText: string;
+  responseTimeMs: number;
+  agentType: string | null;
+  error?: string;
+}
+
+export interface GoldenRunAggregate {
+  scenarioId: string;
+  scenarioTitle: string;
+  mustPass: boolean;
+  minScore: number;
+  n: number;
+  runs: GoldenRun[];
+  medianScore: number;
+  stdevScore: number;
+  passCount: number;
+  failCount: number;
+  flaky: boolean;
+  overallPass: boolean;
+  regressionAlert: boolean;
+  runAt: string;
+}
+
+export interface GoldenListResponse {
+  version: number;
+  updatedAt: string;
+  count: number;
+  scenarios: GoldenScenario[];
+}
+
+export const fetchGoldenScenarios = async (): Promise<GoldenListResponse> => {
+  const res = await fetch(`${LOCAL_API}/golden`);
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  return await res.json();
+};
+
+export const createGoldenScenario = async (scenario: Partial<GoldenScenario>): Promise<GoldenScenario> => {
+  const res = await fetch(`${LOCAL_API}/golden`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scenario),
+  });
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(`API error ${res.status}: ${msg || res.statusText}`);
+  }
+  return await res.json();
+};
+
+export const updateGoldenScenario = async (id: string, scenario: Partial<GoldenScenario>): Promise<GoldenScenario> => {
+  const res = await fetch(`${LOCAL_API}/golden/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scenario),
+  });
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(`API error ${res.status}: ${msg || res.statusText}`);
+  }
+  return await res.json();
+};
+
+export const deleteGoldenScenario = async (id: string): Promise<void> => {
+  const res = await fetch(`${LOCAL_API}/golden/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+};
+
+export const runGoldenScenario = async (id: string, n: number = 3): Promise<GoldenRunAggregate> => {
+  const res = await fetch(`${LOCAL_API}/golden/${id}/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ n }),
+  });
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(`API error ${res.status}: ${msg || res.statusText}`);
+  }
+  return await res.json();
+};
+
+export interface GoldenBatchCallbacks {
+  onStart?: (p: { total: number; n: number; startedAt: string }) => void;
+  onProgress?: (p: { index: number; total: number; scenarioId: string; scenarioTitle: string }) => void;
+  onResult?: (r: GoldenRunAggregate) => void;
+  onError?: (e: { scenarioId?: string; error: string }) => void;
+  onComplete?: (p: {
+    total: number;
+    passed: number;
+    failed: number;
+    mustPassFailures: number;
+    flaky: number;
+    results: GoldenRunAggregate[];
+    finishedAt: string;
+  }) => void;
+}
+
+export const runGoldenBatch = (
+  n: number,
+  mustPassOnly: boolean,
+  cb: GoldenBatchCallbacks
+): EventSource => {
+  const url = `${LOCAL_API}/golden/run-all/stream?n=${n}${mustPassOnly ? '&mustPassOnly=1' : ''}`;
+  const es = new EventSource(url);
+
+  const safe = <T,>(fn: ((v: T) => void) | undefined, v: T) => { try { fn?.(v); } catch (e) { console.error(e); } };
+
+  es.addEventListener('batch-start',     (e) => { try { safe(cb.onStart,    JSON.parse((e as MessageEvent).data)); } catch {} });
+  es.addEventListener('batch-progress',  (e) => { try { safe(cb.onProgress, JSON.parse((e as MessageEvent).data)); } catch {} });
+  es.addEventListener('scenario-result', (e) => { try { safe(cb.onResult,   JSON.parse((e as MessageEvent).data)); } catch {} });
+  es.addEventListener('scenario-error',  (e) => { try { safe(cb.onError,    JSON.parse((e as MessageEvent).data)); } catch {} });
+  es.addEventListener('batch-error',     (e) => { try { safe(cb.onError,    JSON.parse((e as MessageEvent).data)); } catch {} });
+  es.addEventListener('batch-complete',  (e) => {
+    try { safe(cb.onComplete, JSON.parse((e as MessageEvent).data)); } catch {}
+    es.close();
+  });
+  es.onerror = () => {
+    safe(cb.onError, { error: 'SSE stream closed' });
+    es.close();
+  };
+
+  return es;
+};

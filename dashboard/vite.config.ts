@@ -35,6 +35,7 @@ export default defineConfig({
       '/api/sessions/questions':  { target: 'http://localhost:4001', changeOrigin: true },
       '/api/generate-questions':  { target: 'http://localhost:4001', changeOrigin: true },
       '/api/questions-bank':      { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/golden':              { target: 'http://localhost:4001', changeOrigin: true },
     },
   }
 })
