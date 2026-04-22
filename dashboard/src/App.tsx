@@ -1,12 +1,10 @@
 import { DashboardProvider, useDashboard } from './store/DashboardContext';
 import NavigationRail from './components/NavigationRail';
 import ArenaView from './views/ArenaView';
-import HistoryView from './views/HistoryView';
 import SandboxView from './views/SandboxView';
 import ManualChatView from './views/ManualChatView';
 import ChatHistoryView from './views/ChatHistoryView';
 import EvalReviewView from './views/EvalReviewView';
-import MetricsDashboard from './views/MetricsDashboard';
 import EvalEvidenceView from './views/EvalEvidenceView';
 import EvalScoreView from './views/EvalScoreView';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -17,10 +15,8 @@ const VIEW_LABELS: Record<string, { title: string; sub: string; emoji: string }>
   arena:          { title: 'Dual-Agent Arena',    sub: 'Simulate personas vs. your AI agent',   emoji: '⚡' },
   chat:           { title: 'Live Chat',            sub: 'Real-time WhatsApp simulation',          emoji: '💬' },
   'chat-history': { title: 'Chat History',         sub: 'Review & compare saved sessions',        emoji: '📋' },
-  'eval-review':  { title: 'Eval Review',          sub: 'All flags & comments across sessions',    emoji: '📊' },
+  'eval-review':  { title: 'Chat Review',          sub: 'Flagged replies & comments across sessions', emoji: '🔍' },
   sandbox:        { title: 'Questions Lab',        sub: 'Custom edge-case scenarios',             emoji: '🧪' },
-  metrics:        { title: 'Metrics Dashboard',    sub: 'Health scores, trends & analytics',     emoji: '📈' },
-  history:        { title: 'Session History',      sub: 'Evaluation trajectory & scores',        emoji: '📊' },
   'eval-evidence':{ title: 'Eval Evidence',         sub: 'All agent datasets · grouped by agent', emoji: '🗂️' },
   'eval-score':   { title: 'CZ Agent Eval Score',   sub: 'Multi-judge composite score · CI-gated', emoji: '📈' },
 };
@@ -39,8 +35,6 @@ const ViewSwitcher = () => {
     case 'chat':         return <ManualChatView />;
     case 'chat-history': return <ChatHistoryView />;
     case 'eval-review':  return <EvalReviewView />;
-    case 'metrics':      return <MetricsDashboard />;
-    case 'history':      return <HistoryView />;
     case 'sandbox':      return <SandboxView onStartScenario={handleStartScenario} />;
     case 'eval-evidence': return <EvalEvidenceView />;
     case 'eval-score':   return <EvalScoreView />;

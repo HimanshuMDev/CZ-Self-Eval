@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp, Database, Gauge } from 'lucide-react';
+import { Layout, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, MessageSquareWarning, Database, Gauge } from 'lucide-react';
 import { useDashboard } from '../store/DashboardContext';
 
 const NavigationRail: React.FC = () => {
@@ -9,20 +9,23 @@ const NavigationRail: React.FC = () => {
     {
       label: 'Testing',
       items: [
-        { id: 'arena',        icon: Layout,       label: 'Arena',          desc: 'Dual-agent simulation' },
-        { id: 'chat',         icon: MessageCircle,label: 'Live Chat',       desc: 'Real-time chat test' },
-        { id: 'chat-history', icon: ClipboardList, label: 'Chat History',  desc: 'Review sessions' },
-        { id: 'eval-review',  icon: BarChart2,    label: 'Eval Review',    desc: 'All flags & comments' },
-        { id: 'eval-evidence', icon: Database,    label: 'Eval Evidence',  desc: 'All agent datasets' },
-        { id: 'eval-score',   icon: Gauge,        label: 'Eval Score',     desc: 'CZ agent health score' },
+        { id: 'arena',        icon: Layout,                label: 'Arena',         desc: 'Dual-agent simulation' },
+        { id: 'chat',         icon: MessageCircle,         label: 'Live Chat',     desc: 'Real-time chat test' },
+        { id: 'chat-history', icon: ClipboardList,         label: 'Chat History',  desc: 'Past live-chat sessions' },
+        { id: 'eval-review',  icon: MessageSquareWarning,  label: 'Chat Review',   desc: 'Flagged replies & comments' },
+      ]
+    },
+    {
+      label: 'Evaluation',
+      items: [
+        { id: 'eval-evidence', icon: Database,              label: 'Eval Evidence', desc: 'All agent datasets' },
+        { id: 'eval-score',    icon: Gauge,                 label: 'Eval Score',    desc: 'CZ agent health score' },
       ]
     },
     {
       label: 'Tools',
       items: [
         { id: 'sandbox',  icon: FlaskConical, label: 'Questions Lab', desc: 'Edge-case scenarios' },
-        { id: 'metrics',  icon: TrendingUp,   label: 'Metrics',       desc: 'Health & trends' },
-        { id: 'history',  icon: History,      label: 'History',       desc: 'Eval trajectory' },
       ]
     }
   ];
