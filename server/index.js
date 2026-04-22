@@ -22,6 +22,11 @@ mongoose.connect(MONGODB_URI)
       console.log(`     DELETE /api/golden/:id           (delete)`);
       console.log(`     POST   /api/golden/:id/run       (run scenario N times)`);
       console.log(`     GET    /api/golden/run-all/stream (SSE batch runner)`);
+      console.log(`     GET    /api/eval-score/latest   (CZ Agent Score report)`);
+      console.log(`     GET    /api/eval-score/trend    (30-day history)`);
+      console.log(`     GET    /api/eval-score/runs     (last 50 runs)`);
+      console.log(`     POST   /api/eval-score/run      (kick off multi-judge eval)`);
+      console.log(`     GET    /api/eval-score/run/:id/stream (SSE progress)`);
     });
   })
   .catch(err => {

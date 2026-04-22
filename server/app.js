@@ -1,7 +1,8 @@
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
-const { createGoldenRouter } = require('./golden');
+const { createGoldenRouter }   = require('./golden');
+const { createEvalRunsRouter } = require('./eval-runs');
 
 const app = express();
 
@@ -1088,6 +1089,7 @@ app.use('/api/compare-reports',     reportsRouter);
 app.use('/api/eval-results',        evalRouter);
 app.use('/api/questions-bank',      qbRouter);
 app.use('/api/golden',              createGoldenRouter());
+app.use('/api/eval-score',          createEvalRunsRouter());
 
 // ─── Serve dashboard in production ───────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
