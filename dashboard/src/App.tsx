@@ -7,6 +7,7 @@ import SandboxView from './views/SandboxView';
 import ManualChatView from './views/ManualChatView';
 import ChatHistoryView from './views/ChatHistoryView';
 import EvalReviewView from './views/EvalReviewView';
+import MetricsDashboard from './views/MetricsDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { useRef } from 'react';
@@ -18,6 +19,7 @@ const VIEW_LABELS: Record<string, { title: string; sub: string; emoji: string }>
   'eval-review':  { title: 'Eval Review',          sub: 'All flags & comments across sessions',    emoji: '📊' },
   sandbox:        { title: 'Questions Lab',        sub: 'Custom edge-case scenarios',             emoji: '🧪' },
   evidence:       { title: 'Evidence Library',     sub: 'Known failing traces from LangSmith',   emoji: '🛡️' },
+  metrics:        { title: 'Metrics Dashboard',    sub: 'Health scores, trends & analytics',     emoji: '📈' },
   history:        { title: 'Session History',      sub: 'Evaluation trajectory & scores',        emoji: '📊' },
 };
 
@@ -36,6 +38,7 @@ const ViewSwitcher = () => {
     case 'chat-history': return <ChatHistoryView />;
     case 'eval-review':  return <EvalReviewView />;
     case 'evidence':     return <EvidenceView />;
+    case 'metrics':      return <MetricsDashboard />;
     case 'history':      return <HistoryView />;
     case 'sandbox':      return <SandboxView onStartScenario={handleStartScenario} />;
     default:             return <ArenaView ref={arenaRef} />;

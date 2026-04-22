@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Clock, Trash2, ChevronLeft, MessageSquare,
   GitCompare, RefreshCw, AlertCircle, Download, Loader2,
   Flag, ArrowLeftRight, Search, X, Zap,
   BarChart2, CheckCircle, ChevronDown, ChevronRight,
-  Upload, FileJson, CheckCheck, AlertTriangle
+  Upload, FileJson, CheckCheck, AlertTriangle,
+  BookOpen, Save, Play, Layers
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,13 @@ interface CompareEntry {
   newTimeMs?: number;
   similarity: number;
   status: 'match' | 'changed' | 'different' | 'error';
+  // Multi-run fields (set when runCount > 1)
+  allSimilarities?: number[];
+  avgSimilarity?: number;
+  minSimilarity?: number;
+  maxSimilarity?: number;
+  stability?: 'stable' | 'flaky' | 'broken';
+  allResponses?: string[];
 }
 
 interface CompareResult {
@@ -59,6 +67,27 @@ interface CompareResult {
   sessionTitle: string;
   runAt: string;
   entries: CompareEntry[];
+  runCount?: number; // how many runs were merged
+}
+
+interface SavedCompareReport {
+  id: string;
+  sessionId: string;
+  sessionTitle: string;
+  runAt: string;
+  savedAt: string;
+  name?: string;
+  runCount?: number;
+  entries?: CompareEntry[];
+}
+
+interface CompareJob {
+  id: string;
+  sessionId: string;
+  sessionTitle: string;
+  status: 'running' | 'done' | 'error';
+  progress: string;
+  result?: CompareResult;
 }
 
 interface ReviewItem {
@@ -117,6 +146,41 @@ async function apiExportAll(): Promise<ChatSession[]> {
   const data = await res.json();
   return Array.isArray(data) ? data : (data.sessions ?? []);
 }
+
+// ─── Compare Report API helpers ───────────────────────────────────────────────
+
+const REPORTS_API = '/api/compare-reports';
+
+async function apiSaveReport(report: SavedCompareReport): Promise<void> {
+  const res = await fetch(REPORTS_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(report),
+  });
+  if (!res.ok) throw new Error(`Save report failed: ${res.status}`);
+}
+
+async function apiLoadReports(): Promise<Omit<SavedCompareReport, 'entries'>[]> {
+  try {
+    const res = await fetch(REPORTS_API);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
+async function apiLoadReport(id: string): Promise<SavedCompareReport | null> {
+  try {
+    const res = await fetch(`${REPORTS_API}/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch { return null; }
+}
+
+async function apiDeleteReport(id: string): Promise<void> {
+  await fetch(`${REPORTS_API}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 const DEFAULT_NAME = 'Self-Eval Test User';
 
 const FLAG_META = {
@@ -1182,15 +1246,14 @@ const SessionView: React.FC<{
   session: ChatSession;
   onBack: () => void;
   onDelete: () => void;
-  onCompare: () => void;
-  onEvalReview: () => void;
+  onCompare: (runCount: number) => void;
   isComparing: boolean;
   compareProgress: string;
-}> = ({ session, onBack, onDelete, onCompare, onEvalReview, isComparing, compareProgress }) => {
+  compareHistory: Omit<SavedCompareReport, 'entries'>[];
+  onViewCompare: (id: string) => void;
+}> = ({ session, onBack, onDelete, onCompare, isComparing, compareProgress, compareHistory, onViewCompare }) => {
 
-  const evalCount = session.messages.filter(
-    m => m.role === 'agent' && ((m.flag && m.flag in FLAG_META) || m.comment?.trim())
-  ).length;
+  const [showHistory, setShowHistory] = useState(compareHistory.length > 0);
 
   const doExport = () => {
     let md = `# ${session.title}\n${fmtDate(session.createdAt)} · +${session.from}\n\n`;
@@ -1233,43 +1296,21 @@ const SessionView: React.FC<{
             </p>
           </div>
 
-          {/* ── Eval Review CTA button ── */}
+          {/* ── Compare button ── */}
           <button
-            onClick={onEvalReview}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-[12px] transition-all"
+            onClick={() => onCompare(1)}
+            disabled={isComparing}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold transition-all shrink-0"
             style={{
-              background: evalCount > 0
-                ? 'linear-gradient(135deg, #F97316 0%, #fb923c 100%)'
-                : '#F7F8FB',
-              color: evalCount > 0 ? '#fff' : '#64748b',
-              border: evalCount > 0 ? '1.5px solid rgba(249,115,22,0.3)' : '1px solid #EEF0F5',
-              boxShadow: evalCount > 0 ? '0 3px 14px rgba(249,115,22,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
+              background: 'rgba(249,115,22,0.08)',
+              border: '1px solid rgba(249,115,22,0.22)',
+              color: '#ea580c',
+              opacity: isComparing ? 0.65 : 1,
+              cursor: isComparing ? 'not-allowed' : 'pointer',
             }}
-            onMouseEnter={e => {
-              if (evalCount > 0) (e.currentTarget as HTMLElement).style.boxShadow = '0 5px 20px rgba(249,115,22,0.45)';
-              else (e.currentTarget as HTMLElement).style.background = '#FFF7ED';
-            }}
-            onMouseLeave={e => {
-              if (evalCount > 0) (e.currentTarget as HTMLElement).style.boxShadow = '0 3px 14px rgba(249,115,22,0.35)';
-              else (e.currentTarget as HTMLElement).style.background = '#F7F8FB';
-            }}
+            onMouseEnter={e => { if (!isComparing) (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.15)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.08)'; }}
           >
-            <BarChart2 style={{ width: '14px', height: '14px' }} />
-            Eval Review
-            {evalCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[9.5px] font-black"
-                style={{ background: 'rgba(255,255,255,0.25)', color: '#fff' }}>
-                {evalCount}
-              </span>
-            )}
-          </button>
-
-          {/* Secondary actions */}
-          <button onClick={onCompare} disabled={isComparing}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold"
-            style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.2)', color: '#ea580c', cursor: isComparing ? 'not-allowed' : 'pointer', opacity: isComparing ? 0.6 : 1 }}
-            onMouseEnter={e => { if (!isComparing) (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.13)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.07)'; }}>
             {isComparing
               ? <><Loader2 style={{ width: '13px', height: '13px' }} className="animate-spin" />{compareProgress || 'Running…'}</>
               : <><GitCompare style={{ width: '13px', height: '13px' }} />Compare</>
@@ -1303,6 +1344,110 @@ const SessionView: React.FC<{
           {session.messages.map(msg => <MsgBubble key={msg.id} msg={msg} />)}
         </div>
       </div>
+
+      {/* ── Compare History Panel ── */}
+      {compareHistory.length > 0 && (
+        <div className="shrink-0" style={{ background: 'white', borderTop: '1px solid #F0F1F5' }}>
+          {/* Collapse toggle */}
+          <button
+            onClick={() => setShowHistory(v => !v)}
+            className="w-full flex items-center gap-2.5 px-6 py-3 transition-colors"
+            style={{ color: '#ea580c' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFF7ED'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            <ArrowLeftRight style={{ width: '13px', height: '13px' }} />
+            <span className="text-[11.5px] font-bold flex-1 text-left">
+              Compare History
+            </span>
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(249,115,22,0.12)', color: '#ea580c' }}>
+              {compareHistory.length}
+            </span>
+            {showHistory
+              ? <ChevronDown style={{ width: '13px', height: '13px', color: '#b0b8c4' }} />
+              : <ChevronRight style={{ width: '13px', height: '13px', color: '#b0b8c4' }} />
+            }
+          </button>
+
+          <AnimatePresence>
+            {showHistory && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="px-5 pb-4 space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                  {[...compareHistory].reverse().map((r, i) => {
+                    const entries = (r as any).entries as CompareEntry[] | undefined;
+                    const avgSim = entries && entries.length
+                      ? Math.round(entries.reduce((a, e) => a + e.similarity, 0) / entries.length)
+                      : undefined;
+                    const simColor = avgSim === undefined ? '#94a3b8'
+                      : avgSim >= 80 ? '#059669' : avgSim >= 50 ? '#d97706' : '#dc2626';
+                    const isNewest = i === 0;
+
+                    return (
+                      <motion.button
+                        key={r.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => onViewCompare(r.id)}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: isNewest ? 'rgba(249,115,22,0.05)' : '#F7F8FB',
+                          border: isNewest ? '1px solid rgba(249,115,22,0.18)' : '1px solid #EEF0F5',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(249,115,22,0.3)'; (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.07)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isNewest ? 'rgba(249,115,22,0.18)' : '#EEF0F5'; (e.currentTarget as HTMLElement).style.background = isNewest ? 'rgba(249,115,22,0.05)' : '#F7F8FB'; }}
+                      >
+                        {/* Icon */}
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.18)' }}>
+                          <ArrowLeftRight style={{ width: '13px', height: '13px', color: '#F97316' }} />
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            {isNewest && (
+                              <span className="text-[8.5px] font-black px-1.5 py-0.5 rounded-full"
+                                style={{ background: 'rgba(249,115,22,0.15)', color: '#ea580c' }}>
+                                LATEST
+                              </span>
+                            )}
+                            {r.runCount && r.runCount > 1 && (
+                              <span className="text-[8.5px] font-black px-1.5 py-0.5 rounded-full"
+                                style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}>
+                                {r.runCount}× runs
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] font-medium truncate" style={{ color: '#374151' }}>
+                            {fmtDate(r.runAt)}
+                          </p>
+                        </div>
+
+                        {/* Similarity */}
+                        {avgSim !== undefined && (
+                          <span className="text-[13px] font-black shrink-0" style={{ color: simColor }}>
+                            {avgSim}%
+                          </span>
+                        )}
+
+                        <ChevronRight style={{ width: '12px', height: '12px', color: '#d1d9e0', flexShrink: 0 }} />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };
@@ -1331,7 +1476,15 @@ function DiffText({ tokens }: { tokens: { text: string; type: 'same' | 'added' |
   );
 }
 
-const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({ result, onClose }) => {
+const CompareView: React.FC<{
+  result: CompareResult;
+  onClose: () => void;
+  onSave?: () => void;
+  isSaved?: boolean;
+  saveToast?: string | null;
+  onRecompare?: (runCount: number) => void;
+  isRecomparing?: boolean;
+}> = ({ result, onClose, onSave, isSaved, saveToast, onRecompare, isRecomparing }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | CompareEntry['status']>('all');
   const [showDiff, setShowDiff]         = useState(true);
 
@@ -1399,6 +1552,15 @@ const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({
             <p className="text-[10.5px] mt-0.5 truncate" style={{ color: '#94a3b8' }}>{result.sessionTitle}</p>
           </div>
 
+          {/* Multi-run badge */}
+          {result.runCount && result.runCount > 1 && (
+            <div className="px-3 py-2 rounded-xl flex items-center gap-1.5 shrink-0"
+              style={{ background: 'rgba(124,58,237,0.08)', border: '1.5px solid rgba(124,58,237,0.2)' }}>
+              <Play style={{ width: '11px', height: '11px', color: '#7c3aed' }} />
+              <span className="text-[12px] font-black" style={{ color: '#7c3aed' }}>{result.runCount} runs</span>
+            </div>
+          )}
+
           {/* Avg badge */}
           <div className="px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0"
             style={{ background: avgMeta.bg, border: `1.5px solid ${avgMeta.border}` }}>
@@ -1419,6 +1581,45 @@ const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({
             Diff
           </button>
 
+          {/* Save Report */}
+          {onSave && (
+            <button
+              onClick={onSave}
+              title={isSaved ? 'Already saved' : 'Save report to MongoDB'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              style={{
+                background: isSaved ? 'rgba(5,150,105,0.1)' : 'rgba(249,115,22,0.08)',
+                border: isSaved ? '1px solid rgba(5,150,105,0.25)' : '1px solid rgba(249,115,22,0.2)',
+                color: isSaved ? '#059669' : '#ea580c',
+                cursor: isSaved ? 'default' : 'pointer',
+              }}>
+              {isSaved
+                ? <><CheckCheck style={{ width: '12px', height: '12px' }} />Saved</>
+                : <><Save style={{ width: '12px', height: '12px' }} />Save</>
+              }
+            </button>
+          )}
+
+          {/* Recompare */}
+          {onRecompare && (
+            <button
+              onClick={() => !isRecomparing && onRecompare(1)}
+              disabled={isRecomparing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all disabled:opacity-50 shrink-0"
+              style={{
+                background: 'rgba(249,115,22,0.08)',
+                border: '1px solid rgba(249,115,22,0.25)',
+                color: '#ea580c',
+              }}
+              title="Run a new compare and add to history"
+            >
+              {isRecomparing
+                ? <><Loader2 style={{ width: '12px', height: '12px' }} className="animate-spin" />Running…</>
+                : <><RefreshCw style={{ width: '12px', height: '12px' }} />Recompare</>
+              }
+            </button>
+          )}
+
           {/* Export JSON */}
           <button onClick={doExport} style={iconBtn} title="Export JSON"
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFF7ED'; }}
@@ -1426,6 +1627,23 @@ const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({
             <Download style={{ width: '14px', height: '14px' }} />
           </button>
         </div>
+
+        {/* Save Toast */}
+        <AnimatePresence>
+          {saveToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="mx-0 mb-2 px-4 py-2 rounded-xl text-[11.5px] font-semibold flex items-center gap-2"
+              style={{
+                background: saveToast.includes('✓') ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.08)',
+                border: saveToast.includes('✓') ? '1px solid rgba(5,150,105,0.25)' : '1px solid rgba(220,38,38,0.2)',
+                color: saveToast.includes('✓') ? '#059669' : '#dc2626',
+              }}>
+              {saveToast.includes('✓') ? <CheckCheck style={{ width: '13px', height: '13px' }} /> : <AlertCircle style={{ width: '13px', height: '13px' }} />}
+              {saveToast}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Summary bar ── */}
         <div className="grid grid-cols-4 gap-3 mb-4">
@@ -1604,14 +1822,69 @@ const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({
                   </div>
                 </div>
 
-                {/* Similarity progress bar at bottom of card */}
-                <div className="px-5 py-2.5 flex items-center gap-3 border-t" style={{ borderColor: '#F0F1F5', background: '#FAFBFC' }}>
-                  <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: '#c1c9d4' }}>Similarity</span>
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#EEF0F5' }}>
-                    <div className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${entry.similarity}%`, background: sm.bar }} />
+                {/* Bottom bar: similarity + stability (multi-run) */}
+                <div className="px-5 py-2.5 border-t" style={{ borderColor: '#F0F1F5', background: '#FAFBFC' }}>
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: '#c1c9d4' }}>Similarity</span>
+
+                    {/* Stability badge — only for multi-run */}
+                    {entry.stability && (() => {
+                      const stab = {
+                        stable:  { label: 'Stable',  color: '#059669', bg: 'rgba(5,150,105,0.1)',   border: 'rgba(5,150,105,0.25)',   emoji: '🟢' },
+                        flaky:   { label: 'Flaky',   color: '#d97706', bg: 'rgba(217,119,6,0.1)',   border: 'rgba(217,119,6,0.25)',   emoji: '🟡' },
+                        broken:  { label: 'Broken',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.25)',   emoji: '🔴' },
+                      }[entry.stability];
+                      return (
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold"
+                          style={{ background: stab.bg, border: `1px solid ${stab.border}`, color: stab.color }}>
+                          {stab.emoji} {stab.label}
+                        </span>
+                      );
+                    })()}
+
+                    {/* Min / Max range for multi-run */}
+                    {entry.allSimilarities && entry.allSimilarities.length > 1 && (
+                      <span className="text-[9px] font-semibold ml-auto" style={{ color: '#94a3b8' }}>
+                        {entry.minSimilarity}% – {entry.maxSimilarity}%
+                      </span>
+                    )}
+
+                    {!entry.allSimilarities && (
+                      <span className="text-[10px] font-black ml-auto shrink-0" style={{ color: sm.color }}>{entry.similarity}%</span>
+                    )}
                   </div>
-                  <span className="text-[10px] font-black shrink-0" style={{ color: sm.color }}>{entry.similarity}%</span>
+
+                  {/* Bar: single run = plain bar; multi-run = range bar */}
+                  {entry.allSimilarities && entry.allSimilarities.length > 1 ? (
+                    <div className="relative h-2 rounded-full overflow-hidden" style={{ background: '#EEF0F5' }}>
+                      {/* Range band (min→max) */}
+                      <div className="absolute h-full rounded-full opacity-30"
+                        style={{ left: `${entry.minSimilarity ?? 0}%`, width: `${(entry.maxSimilarity ?? 0) - (entry.minSimilarity ?? 0)}%`, background: sm.bar }} />
+                      {/* Avg marker */}
+                      <div className="absolute h-full w-1 rounded-full"
+                        style={{ left: `${entry.avgSimilarity ?? entry.similarity}%`, background: sm.bar }} />
+                    </div>
+                  ) : (
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#EEF0F5' }}>
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${entry.similarity}%`, background: sm.bar }} />
+                    </div>
+                  )}
+
+                  {/* Per-run dots (multi-run) */}
+                  {entry.allSimilarities && entry.allSimilarities.length > 1 && (
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      {entry.allSimilarities.map((s, ri) => {
+                        const dotMeta = s >= 80 ? STATUS_META.match : s >= 50 ? STATUS_META.changed : STATUS_META.different;
+                        return (
+                          <div key={ri} className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: dotMeta.bar }} />
+                            <span className="text-[8.5px] font-bold" style={{ color: dotMeta.color }}>{s}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );
@@ -1622,21 +1895,142 @@ const CompareView: React.FC<{ result: CompareResult; onClose: () => void }> = ({
   );
 };
 
+// ─── Saved Reports Screen ─────────────────────────────────────────────────────
+
+const SavedReportsScreen: React.FC<{
+  reports: Omit<SavedCompareReport, 'entries'>[];
+  onBack: () => void;
+  onView: (report: Omit<SavedCompareReport, 'entries'>) => void;
+  onDelete: (id: string) => void;
+}> = ({ reports, onBack, onView, onDelete }) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0" style={{ background: 'white', borderBottom: '1px solid #F0F1F5', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <div className="px-6 py-4 flex items-center gap-4">
+          <button onClick={onBack} style={iconBtn}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFF7ED'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(249,115,22,0.25)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = '#EEF0F5'; }}>
+            <ChevronLeft style={{ width: '16px', height: '16px' }} />
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(249,115,22,0.06))', border: '1px solid rgba(249,115,22,0.22)' }}>
+              <BookOpen style={{ width: '16px', height: '16px', color: '#F97316' }} />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-black leading-tight" style={{ color: '#0f172a', letterSpacing: '-0.02em' }}>
+                Saved Compare Reports
+              </h2>
+              <p className="text-[11px]" style={{ color: '#94a3b8' }}>
+                {reports.length} report{reports.length !== 1 ? 's' : ''} stored in MongoDB
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-3" style={{ background: '#F7F8FB' }}>
+        {reports.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4">
+            <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+              style={{ background: 'white', border: '1px solid #EEF0F5', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
+              <BookOpen style={{ width: '28px', height: '28px', color: '#F97316', opacity: 0.4 }} />
+            </div>
+            <p className="text-[15px] font-bold" style={{ color: '#1e293b' }}>No saved reports yet</p>
+            <p className="text-[12px]" style={{ color: '#94a3b8' }}>Run a compare and click "Save" to store it here.</p>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {reports.map((report, i) => (
+              <motion.div key={report.id}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97 }} transition={{ delay: i * 0.03 }}
+                className="rounded-2xl overflow-hidden cursor-pointer group"
+                style={{ background: 'white', border: '1px solid #EEF0F5', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', transition: 'box-shadow 0.15s, border-color 0.15s' }}
+                onClick={() => onView(report)}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(249,115,22,0.12)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(249,115,22,0.28)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; (e.currentTarget as HTMLElement).style.borderColor = '#EEF0F5'; }}>
+
+                <div style={{ height: '3px', background: 'linear-gradient(90deg, #F97316, #fb923c)', opacity: 0, transition: 'opacity 0.15s' }}
+                  className="group-hover:opacity-100" />
+
+                <div className="px-5 py-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
+                    style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.18)' }}>
+                    <ArrowLeftRight style={{ width: '16px', height: '16px', color: '#F97316' }} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-bold truncate" style={{ color: '#0f172a' }}>
+                      {report.sessionTitle}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10.5px]" style={{ color: '#94a3b8' }}>
+                        Run {fmtDate(report.runAt, true)}
+                      </span>
+                      <span className="text-[10px] opacity-40">·</span>
+                      <span className="text-[10.5px]" style={{ color: '#94a3b8' }}>
+                        Saved {fmtDate(report.savedAt, true)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setDeletingId(report.id);
+                      onDelete(report.id);
+                    }}
+                    disabled={deletingId === report.id}
+                    className="shrink-0 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
+                    style={{ background: '#fff', border: '1px solid #EEF0F5', color: '#94a3b8' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#dc2626'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(220,38,38,0.25)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#94a3b8'; (e.currentTarget as HTMLElement).style.borderColor = '#EEF0F5'; }}>
+                    {deletingId === report.id
+                      ? <Loader2 style={{ width: '13px', height: '13px' }} className="animate-spin" />
+                      : <Trash2 style={{ width: '13px', height: '13px' }} />
+                    }
+                  </button>
+
+                  <ChevronRight style={{ width: '14px', height: '14px', color: '#d1d9e0' }}
+                    className="group-hover:text-orange-400 transition-colors" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-type Screen = 'list' | 'session' | 'eval' | 'compare' | 'globalEval';
+type Screen = 'list' | 'session' | 'eval' | 'compare' | 'globalEval' | 'savedReports';
 
 const ChatHistoryView: React.FC = () => {
   const [screen, setScreen]                   = useState<Screen>('list');
   const [sessions, setSessions]               = useState<Omit<ChatSession, 'messages'>[]>([]);
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
-  const [compareResult, setCompareResult]     = useState<CompareResult | null>(null);
   const [isLoading, setIsLoading]             = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-  const [isComparing, setIsComparing]         = useState(false);
-  const [compareProgress, setCompareProgress] = useState('');
   const [error, setError]                     = useState<string | null>(null);
   const [search, setSearch]                   = useState('');
+
+  // ── Multi-compare job state ────────────────────────────────────────────────
+  const [compareJobs, setCompareJobs]         = useState<Map<string, CompareJob>>(new Map());
+  const [activeJobId, setActiveJobId]         = useState<string | null>(null);
+  const [showJobsPanel, setShowJobsPanel]     = useState(false);
+  const compareJobsRef                        = useRef<Map<string, CompareJob>>(new Map());
+
+  // ── Saved Reports state ────────────────────────────────────────────────────
+  const [savedReports, setSavedReports]       = useState<Omit<SavedCompareReport, 'entries'>[]>([]);
+  const [viewingReport, setViewingReport]     = useState<SavedCompareReport | null>(null);
+  const [reportSaveToast, setReportSaveToast] = useState<string | null>(null);
 
   // ── Import state ───────────────────────────────────────────────────────────
   const [showImport, setShowImport]           = useState(false);
@@ -1649,14 +2043,18 @@ const ChatHistoryView: React.FC = () => {
   const loadSessions = useCallback(async () => {
     setIsLoading(true); setError(null);
     try {
-      // apiLoadSessions returns already sorted (server sorts by updatedAt desc)
       const sessions = await apiLoadSessions();
       setSessions(sessions);
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to connect to server — make sure the self-eval server is running (npm start in src/self-eval/server)'); }
     finally { setIsLoading(false); }
   }, []);
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+  const loadSavedReports = useCallback(async () => {
+    const reports = await apiLoadReports();
+    setSavedReports(reports);
+  }, []);
+
+  useEffect(() => { loadSessions(); loadSavedReports(); }, [loadSessions, loadSavedReports]);
 
   // ── Import helpers ─────────────────────────────────────────────────────────
   const parseImportFile = (text: string): ChatSession[] => {
@@ -1732,103 +2130,187 @@ const ChatHistoryView: React.FC = () => {
     if (selectedSession?.id === id) { setSelectedSession(null); setScreen('list'); }
   };
 
-  const runCompare = async () => {
-    if (!selectedSession) return;
-    setIsComparing(true);
-    setCompareProgress('Preparing…');
+  // ── Update a job in the ref + state atomically ─────────────────────────────
+  const updateJob = useCallback((jobId: string, patch: Partial<CompareJob>) => {
+    compareJobsRef.current = new Map(compareJobsRef.current);
+    const existing = compareJobsRef.current.get(jobId);
+    if (existing) compareJobsRef.current.set(jobId, { ...existing, ...patch });
+    setCompareJobs(new Map(compareJobsRef.current));
+  }, []);
 
-    // Fresh conversation from for this compare run
-    const from = `917${Math.floor(1e9 + Math.random() * 9e9)}`;
-
-    // Build turns: every user message paired with the next agent reply
-    const msgs = selectedSession.messages;
-    const turns: Array<{ user: ChatMessageRecord; agent?: ChatMessageRecord }> = [];
-    msgs.forEach((m, idx) => {
-      if (m.role === 'user') {
-        const next = msgs.slice(idx + 1).find(x => x.role === 'agent');
-        turns.push({ user: m, agent: next });
-      }
-    });
-
-    const entries: CompareEntry[] = [];
+  // ── Single compare pass — returns raw entries ──────────────────────────────
+  const runSinglePass = useCallback(async (
+    session: ChatSession,
+    turns: Array<{ user: ChatMessageRecord; agent?: ChatMessageRecord }>,
+    from: string,
+    jobId: string,
+    runIndex: number,
+    totalRuns: number,
+  ): Promise<Array<{ text: string; agent?: string; timeMs?: number; succeeded: boolean }>> => {
     const RETRY_LIMIT = 2;
-    const TURN_DELAY_MS = 500;
+    const TURN_DELAY_MS = 400;
+    const results: Array<{ text: string; agent?: string; timeMs?: number; succeeded: boolean }> = [];
 
     for (let i = 0; i < turns.length; i++) {
-      const { user, agent } = turns[i];
-      setCompareProgress(`Turn ${i + 1} of ${turns.length} · sending…`);
+      const { user } = turns[i];
+      updateJob(jobId, {
+        progress: `Run ${runIndex + 1}/${totalRuns} · turn ${i + 1}/${turns.length}…`,
+      });
 
-      let newText = '[Error]';
-      let newAgent: string | undefined;
-      let newTimeMs: number | undefined;
+      let text = '[Error]';
+      let agent: string | undefined;
+      let timeMs: number | undefined;
       let succeeded = false;
 
       for (let attempt = 0; attempt <= RETRY_LIMIT; attempt++) {
-        if (attempt > 0) {
-          setCompareProgress(`Turn ${i + 1} of ${turns.length} · retry ${attempt}…`);
-          await new Promise(r => setTimeout(r, 600 * attempt));
-        }
+        if (attempt > 0) await new Promise(r => setTimeout(r, 600 * attempt));
         try {
           const body: Record<string, unknown> = { from, name: DEFAULT_NAME };
-          if (user.isButtonTap) {
-            body.buttonReplyId = user.content;
-            body.buttonTitle   = user.content;
-          } else {
-            body.message = user.content;
-          }
-          const res  = await fetch(SIMULATE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+          if (user.isButtonTap) { body.buttonReplyId = user.content; body.buttonTitle = user.content; }
+          else body.message = user.content;
+
+          const res = await fetch(SIMULATE_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           if (data?.success) {
-            newText   = data.response?.content ?? '[No response]';
-            newAgent  = data.agentType ?? data.response?.metadata?.agentType;
-            newTimeMs = data.processingTimeMs ?? data.response?.metadata?.responseTimeMs;
-            succeeded = true;
-            break;
-          } else {
-            throw new Error(data?.error ?? 'API returned success:false');
-          }
-        } catch {
-          if (attempt === RETRY_LIMIT) {
-            newText = '[Error — no response after retries]';
-          }
-        }
+            text = data.response?.content ?? '[No response]';
+            agent = data.agentType ?? data.response?.metadata?.agentType;
+            timeMs = data.processingTimeMs ?? data.response?.metadata?.responseTimeMs;
+            succeeded = true; break;
+          } else throw new Error(data?.error ?? 'API returned success:false');
+        } catch { if (attempt === RETRY_LIMIT) text = '[Error — no response after retries]'; }
       }
 
-      const sim = succeeded ? similarity(agent?.content ?? '', newText) : 0;
-      entries.push({
-        userMessage: user.content,
-        isButtonTap: !!user.isButtonTap,
-        oldResponse: agent?.content ?? '[No previous response]',
-        newResponse: newText,
-        oldAgent:    agent?.metadata?.agentType,
-        newAgent,
-        oldTimeMs:   agent?.metadata?.responseTimeMs,
-        newTimeMs,
-        similarity:  sim,
-        status:      entryStatus(sim, !succeeded),
-      });
+      results.push({ text, agent, timeMs, succeeded });
+      if (i < turns.length - 1) await new Promise(r => setTimeout(r, TURN_DELAY_MS));
+    }
+    return results;
+  }, [updateJob]);
 
-      if (i < turns.length - 1) {
-        setCompareProgress(`Turn ${i + 1} of ${turns.length} · done ✓`);
-        await new Promise(r => setTimeout(r, TURN_DELAY_MS));
+  // ── Stability classifier ───────────────────────────────────────────────────
+  function calcStability(sims: number[]): CompareEntry['stability'] {
+    if (sims.length <= 1) return undefined;
+    const range = Math.max(...sims) - Math.min(...sims);
+    const avg   = sims.reduce((a, b) => a + b, 0) / sims.length;
+    if (avg < 40) return 'broken';
+    if (range > 20) return 'flaky';
+    return 'stable';
+  }
+
+  // ── Run compare for a given session (parallel-safe, multi-run support) ─────
+  const runCompare = useCallback(async (session: ChatSession, runCount = 1) => {
+    const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const newJob: CompareJob = {
+      id: jobId,
+      sessionId: session.id,
+      sessionTitle: session.title,
+      status: 'running',
+      progress: 'Preparing…',
+    };
+    compareJobsRef.current = new Map(compareJobsRef.current).set(jobId, newJob);
+    setCompareJobs(new Map(compareJobsRef.current));
+    setShowJobsPanel(true);
+
+    const msgs = session.messages;
+    const turns: Array<{ user: ChatMessageRecord; agent?: ChatMessageRecord }> = [];
+    msgs.forEach((m, idx) => {
+      if (m.role === 'user') {
+        turns.push({ user: m, agent: msgs.slice(idx + 1).find(x => x.role === 'agent') });
+      }
+    });
+
+    // Run N passes sequentially (each uses a fresh phone number to avoid session bleeding)
+    const allPasses: Array<Array<{ text: string; agent?: string; timeMs?: number; succeeded: boolean }>> = [];
+    for (let r = 0; r < runCount; r++) {
+      const from = `917${Math.floor(1e9 + Math.random() * 9e9)}`;
+      const pass = await runSinglePass(session, turns, from, jobId, r, runCount);
+      allPasses.push(pass);
+      if (r < runCount - 1) {
+        updateJob(jobId, { progress: `Run ${r + 1}/${runCount} done · starting next…` });
+        await new Promise(r2 => setTimeout(r2, 800));
       }
     }
 
-    setCompareResult({
-      sessionId:    selectedSession.id,
-      sessionTitle: selectedSession.title,
-      runAt:        new Date().toISOString(),
-      entries,
+    // Merge passes into entries
+    const entries: CompareEntry[] = turns.map((turn, i) => {
+      const { user, agent } = turn;
+      const passResults = allPasses.map(p => p[i]);
+      const succeeded = passResults.some(p => p.succeeded);
+
+      const sims = passResults.map(p =>
+        p.succeeded ? similarity(agent?.content ?? '', p.text) : 0
+      );
+      const avgSim  = Math.round(sims.reduce((a, b) => a + b, 0) / sims.length);
+      const minSim  = Math.min(...sims);
+      const maxSim  = Math.max(...sims);
+
+      // Pick the response closest to the average similarity as the representative
+      const bestIdx = sims.reduce((bestI, s, idx) =>
+        Math.abs(s - avgSim) < Math.abs(sims[bestI] - avgSim) ? idx : bestI, 0);
+      const best = passResults[bestIdx];
+
+      const finalSim = runCount === 1 ? sims[0] : avgSim;
+      const isError  = !succeeded;
+
+      return {
+        userMessage: user.content,
+        isButtonTap: !!user.isButtonTap,
+        oldResponse: agent?.content ?? '[No previous response]',
+        newResponse: best.text,
+        oldAgent:    agent?.metadata?.agentType,
+        newAgent:    best.agent,
+        oldTimeMs:   agent?.metadata?.responseTimeMs,
+        newTimeMs:   best.timeMs,
+        similarity:  finalSim,
+        status:      entryStatus(finalSim, isError),
+        ...(runCount > 1 ? {
+          allSimilarities: sims,
+          avgSimilarity:   avgSim,
+          minSimilarity:   minSim,
+          maxSimilarity:   maxSim,
+          stability:       calcStability(sims),
+          allResponses:    passResults.map(p => p.text),
+        } : {}),
+      } satisfies CompareEntry;
     });
-    setIsComparing(false);
-    setCompareProgress('');
+
+    const runAt = new Date().toISOString();
+    const result: CompareResult = {
+      sessionId:    session.id,
+      sessionTitle: session.title,
+      runAt,
+      entries,
+      runCount,
+    };
+    updateJob(jobId, { status: 'done', progress: 'Complete', result });
+
+    // ── Auto-save every compare to MongoDB (builds full history) ─────────────
+    try {
+      const report: SavedCompareReport = {
+        id:           `report_${jobId}`,
+        sessionId:    session.id,
+        sessionTitle: session.title,
+        runAt,
+        savedAt:      runAt,
+        runCount,
+        entries,
+      };
+      await apiSaveReport(report);
+      await loadSavedReports();
+    } catch (e) {
+      console.warn('[AutoSave compare] failed:', e);
+    }
+  }, [updateJob, runSinglePass, loadSavedReports]);
+
+  // ── Open a completed job's result in the compare screen ───────────────────
+  const openJobResult = useCallback((job: CompareJob) => {
+    if (job.status !== 'done' || !job.result) return;
+    setActiveJobId(job.id);
+    setViewingReport(null);
     setScreen('compare');
-  };
+  }, []);
 
   const filtered = sessions.filter(s => !search || s.title.toLowerCase().includes(search.toLowerCase()));
 
@@ -1845,6 +2327,23 @@ const ChatHistoryView: React.FC = () => {
     return <GlobalEvalScreen sessions={sessions} onBack={() => setScreen('list')} />;
   }
 
+  if (screen === 'savedReports') {
+    return (
+      <SavedReportsScreen
+        reports={savedReports}
+        onBack={() => setScreen('list')}
+        onView={async (report) => {
+          const full = await apiLoadReport(report.id);
+          if (full) { setViewingReport(full); setScreen('compare'); }
+        }}
+        onDelete={async (id) => {
+          await apiDeleteReport(id);
+          await loadSavedReports();
+        }}
+      />
+    );
+  }
+
   if (screen === 'session' || screen === 'eval' || screen === 'compare') {
     if (isLoadingDetail) return (
       <div className="flex-1 flex items-center justify-center flex-col gap-3" style={{ background: '#F7F8FB' }}>
@@ -1853,23 +2352,84 @@ const ChatHistoryView: React.FC = () => {
       </div>
     );
 
-    if (screen === 'compare' && compareResult) {
-      return <CompareView result={compareResult} onClose={() => setScreen('session')} />;
+    if (screen === 'compare') {
+      // Could be viewing a saved report or a live job result
+      const liveResult = activeJobId ? compareJobs.get(activeJobId)?.result : undefined;
+      const result = viewingReport?.entries ? {
+        sessionId: viewingReport.sessionId,
+        sessionTitle: viewingReport.sessionTitle,
+        runAt: viewingReport.runAt,
+        entries: viewingReport.entries,
+      } : liveResult;
+
+      if (result) {
+        const savedId = viewingReport?.id ?? (activeJobId ? `report_${activeJobId}` : undefined);
+        const alreadySaved = savedId ? savedReports.some(r => r.id === savedId) : false;
+        return (
+          <CompareView
+            result={result}
+            onClose={() => viewingReport ? setScreen('savedReports') : setScreen('session')}
+            onSave={async () => {
+              const reportId = savedId ?? `report_${Date.now()}`;
+              const report: SavedCompareReport = {
+                id: reportId,
+                sessionId: result.sessionId,
+                sessionTitle: result.sessionTitle,
+                runAt: result.runAt,
+                savedAt: new Date().toISOString(),
+                entries: result.entries,
+              };
+              try {
+                await apiSaveReport(report);
+                await loadSavedReports();
+                setReportSaveToast('Report saved ✓');
+                setTimeout(() => setReportSaveToast(null), 2500);
+              } catch (err) {
+                setReportSaveToast('Save failed — is the server running?');
+                setTimeout(() => setReportSaveToast(null), 3000);
+              }
+            }}
+            isSaved={alreadySaved}
+            saveToast={reportSaveToast}
+            onRecompare={async (runCount) => {
+              // Load the session if we don't already have it
+              let session = selectedSession?.id === result.sessionId ? selectedSession : null;
+              if (!session) {
+                session = await apiLoadSession(result.sessionId);
+                if (session) setSelectedSession(session);
+              }
+              // Fire a new compare job in the background — result appears in the floating jobs panel
+              if (session) runCompare(session, runCount);
+            }}
+            isRecomparing={Array.from(compareJobs.values()).some(
+              j => j.sessionId === result.sessionId && j.status === 'running'
+            )}
+          />
+        );
+      }
     }
 
     if ((screen === 'session' || screen === 'eval') && selectedSession) {
       if (screen === 'eval') {
         return <EvalScreen session={selectedSession} onBack={() => setScreen('session')} />;
       }
+      // Derive comparing state from the running jobs for this session
+      const sessionRunningJob = Array.from(compareJobs.values()).find(
+        j => j.sessionId === selectedSession.id && j.status === 'running'
+      );
       return (
         <SessionView
           session={selectedSession}
           onBack={() => setScreen('list')}
           onDelete={() => deleteSession(selectedSession.id)}
-          onCompare={runCompare}
-          onEvalReview={() => setScreen('eval')}
-          isComparing={isComparing}
-          compareProgress={compareProgress}
+          onCompare={(rc) => runCompare(selectedSession, rc)}
+          isComparing={!!sessionRunningJob}
+          compareProgress={sessionRunningJob?.progress ?? ''}
+          compareHistory={savedReports.filter(r => r.sessionId === selectedSession.id)}
+          onViewCompare={async (id) => {
+            const full = await apiLoadReport(id);
+            if (full) { setViewingReport(full); setScreen('compare'); }
+          }}
         />
       );
     }
@@ -2069,6 +2629,28 @@ const ChatHistoryView: React.FC = () => {
           {search && <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: '#94a3b8' }}><X style={{ width: '12px', height: '12px' }} /></button>}
         </div>
 
+        {/* Saved Reports button */}
+        <button
+          onClick={() => setScreen('savedReports')}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-[11.5px] transition-all shrink-0"
+          style={{
+            background: savedReports.length > 0 ? 'rgba(249,115,22,0.07)' : '#F7F8FB',
+            color: savedReports.length > 0 ? '#ea580c' : '#94a3b8',
+            border: savedReports.length > 0 ? '1px solid rgba(249,115,22,0.2)' : '1px solid #EEF0F5',
+            marginLeft: 'auto',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.12)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = savedReports.length > 0 ? 'rgba(249,115,22,0.07)' : '#F7F8FB'; }}>
+          <BookOpen style={{ width: '13px', height: '13px' }} />
+          Reports
+          {savedReports.length > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black"
+              style={{ background: 'rgba(249,115,22,0.15)', color: '#ea580c' }}>
+              {savedReports.length}
+            </span>
+          )}
+        </button>
+
         {/* Global Eval Review button */}
         <button
           onClick={() => setScreen('globalEval')}
@@ -2082,7 +2664,6 @@ const ChatHistoryView: React.FC = () => {
             border: totalEvalCount > 0 ? '1.5px solid rgba(249,115,22,0.3)' : '1px solid #EEF0F5',
             boxShadow: totalEvalCount > 0 ? '0 3px 14px rgba(249,115,22,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
             cursor: totalEvalCount === 0 ? 'default' : 'pointer',
-            marginLeft: 'auto',
           }}
           onMouseEnter={e => { if (totalEvalCount > 0) (e.currentTarget as HTMLElement).style.boxShadow = '0 5px 20px rgba(249,115,22,0.45)'; }}
           onMouseLeave={e => { if (totalEvalCount > 0) (e.currentTarget as HTMLElement).style.boxShadow = '0 3px 14px rgba(249,115,22,0.35)'; }}
@@ -2162,6 +2743,86 @@ const ChatHistoryView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── Floating Compare Jobs Panel ── */}
+      <AnimatePresence>
+        {compareJobs.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+            className="fixed bottom-5 right-5 z-50 w-80"
+            style={{ filter: 'drop-shadow(0 12px 40px rgba(0,0,0,0.18))' }}
+          >
+            <div className="rounded-2xl overflow-hidden"
+              style={{ background: 'white', border: '1px solid #EEF0F5' }}>
+
+              {/* Panel header */}
+              <div className="px-4 py-3 flex items-center gap-2.5"
+                style={{ background: 'linear-gradient(135deg,rgba(249,115,22,0.07),rgba(249,115,22,0.03))', borderBottom: '1px solid #F0F1F5' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                  <Layers style={{ width: '13px', height: '13px', color: '#F97316' }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[12px] font-black" style={{ color: '#0f172a' }}>Compare Jobs</p>
+                  <p className="text-[9.5px]" style={{ color: '#94a3b8' }}>
+                    {Array.from(compareJobs.values()).filter(j => j.status === 'running').length} running ·{' '}
+                    {Array.from(compareJobs.values()).filter(j => j.status === 'done').length} done
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowJobsPanel(p => !p)}
+                  className="p-1 rounded-lg text-[9.5px] font-semibold"
+                  style={{ color: '#94a3b8', background: '#F7F8FB', border: '1px solid #EEF0F5' }}>
+                  {showJobsPanel ? <ChevronDown style={{ width: '12px', height: '12px' }} /> : <ChevronRight style={{ width: '12px', height: '12px' }} />}
+                </button>
+              </div>
+
+              {/* Job list */}
+              <AnimatePresence>
+                {showJobsPanel && (
+                  <motion.div
+                    initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+                    style={{ overflow: 'hidden' }}>
+                    <div className="divide-y" style={{ borderColor: '#F0F1F5', maxHeight: '240px', overflowY: 'auto' }}>
+                      {Array.from(compareJobs.values()).reverse().map(job => (
+                        <div key={job.id}
+                          className="px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors hover:bg-orange-50"
+                          onClick={() => {
+                            if (job.status === 'done') openJobResult(job);
+                          }}>
+                          <div className="shrink-0">
+                            {job.status === 'running'
+                              ? <Loader2 style={{ width: '14px', height: '14px', color: '#F97316' }} className="animate-spin" />
+                              : job.status === 'done'
+                              ? <CheckCheck style={{ width: '14px', height: '14px', color: '#059669' }} />
+                              : <AlertCircle style={{ width: '14px', height: '14px', color: '#dc2626' }} />
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11.5px] font-semibold truncate" style={{ color: '#0f172a' }}>
+                              {job.sessionTitle}
+                            </p>
+                            <p className="text-[9.5px] mt-0.5" style={{ color: '#94a3b8' }}>{job.progress}</p>
+                          </div>
+                          {job.status === 'done' && (
+                            <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded"
+                              style={{ background: 'rgba(249,115,22,0.09)', color: '#ea580c', border: '1px solid rgba(249,115,22,0.18)' }}>
+                              View →
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

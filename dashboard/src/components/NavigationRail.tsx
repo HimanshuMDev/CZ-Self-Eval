@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Shield, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2 } from 'lucide-react';
+import { Layout, Shield, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp } from 'lucide-react';
 import { useDashboard } from '../store/DashboardContext';
 
 const NavigationRail: React.FC = () => {
@@ -20,6 +20,7 @@ const NavigationRail: React.FC = () => {
       items: [
         { id: 'sandbox',  icon: FlaskConical, label: 'Questions Lab', desc: 'Edge-case scenarios' },
         { id: 'evidence', icon: Shield,       label: 'Evidence',      desc: 'Failing traces' },
+        { id: 'metrics',  icon: TrendingUp,   label: 'Metrics',       desc: 'Health & trends' },
         { id: 'history',  icon: History,      label: 'History',       desc: 'Eval trajectory' },
       ]
     }

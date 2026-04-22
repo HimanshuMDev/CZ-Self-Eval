@@ -212,3 +212,167 @@ export const deleteChatSession = async (id: string) => {
   if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
   return await res.json();
 };
+
+// --- Local eval server (port 4001 via Vite proxy) ---
+
+const LOCAL_API = '/api';
+
+export interface EvalResultRecord {
+  scenarioId: string;
+  scenarioName: string;
+  category: string;
+  severity: string;
+  pass: boolean;
+  score: number;
+  reason: string;
+  detail?: string;
+  response?: string;
+  testMessage: string;
+  runAt?: string;
+  isFlaky?: boolean;
+}
+
+export const saveEvalResult = async (result: EvalResultRecord) => {
+  const res = await fetch(`${LOCAL_API}/eval-results`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(result),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  return await res.json();
+};
+
+export const fetchEvalResults = async () => {
+  const res = await fetch(`${LOCAL_API}/eval-results`);
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  const data = await res.json();
+  return (data.results || []) as EvalResultRecord[];
+};
+
+export interface MetricsData {
+  healthScore: number;
+  totalSessions: number;
+  passRateByDay: { date: string; rate: number; total: number }[];
+  sessionsByDay: { date: string; count: number }[];
+  evalByCategory: { category: string; pass: number; fail: number; total: number }[];
+  agentFailures: { agentType: string; count: number }[];
+  topFailing: { name: string; failCount: number; lastStatus: string }[];
+  flakyCount: number;
+}
+
+export const fetchMetrics = async (): Promise<MetricsData> => {
+  const res = await fetch(`${LOCAL_API}/metrics`);
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  return await res.json();
+};
+
+export const searchSessions = async (query: string) => {
+  const res = await fetch(`${LOCAL_API}/sessions/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  const data = await res.json();
+  return (data.sessions || []) as Omit<ChatSession, 'messages'>[];
+};
+
+// ─── Question Bank (persisted in MongoDB) ─────────────────────────────────────
+
+export interface QuestionBankItem {
+  id: string;
+  text: string;
+  category: string;
+  source: 'ai' | 'history' | 'custom';
+  batchId?: string | null;
+  createdAt: string;
+}
+
+export interface GenerateResult {
+  ok: boolean;
+  method: 'llm' | 'fallback';
+  historyCount: number;
+  generatedCount: number;
+  savedCount: number;
+  batchId: string;
+  questions: QuestionBankItem[];
+}
+
+/** Fetch all saved questions from the bank */
+export const fetchQuestionBank = async (): Promise<QuestionBankItem[]> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank`);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return data.questions as QuestionBankItem[];
+};
+
+/** Preview: generate questions WITHOUT saving — for the selection dialog */
+export const previewQuestionBank = async (count = 20): Promise<{
+  ok: boolean; method: string; historyCount: number;
+  questions: { text: string; category: string }[];
+}> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ count }),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return await res.json();
+};
+
+/** Save only the user-selected questions from the dialog */
+export const saveBatchQuestions = async (
+  questions: { text: string; category: string }[]
+): Promise<GenerateResult> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank/save-batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ questions }),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return await res.json() as GenerateResult;
+};
+
+/** Full pipeline: pull history → AI generate → save to DB → return all questions */
+export const generateQuestionBank = async (count = 20): Promise<GenerateResult> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ count }),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return await res.json() as GenerateResult;
+};
+
+/** Add a single custom question */
+export const addQuestionBankItem = async (text: string): Promise<QuestionBankItem> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `API error ${res.status}`);
+  }
+  const data = await res.json();
+  return data.question as QuestionBankItem;
+};
+
+/** Delete a question by id */
+export const deleteQuestionBankItem = async (id: string): Promise<void> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+};
+
+/** Delete ALL questions from bank */
+export const clearQuestionBank = async (): Promise<void> => {
+  const res = await fetch(`${LOCAL_API}/questions-bank`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+};
+
+export const llmJudge = async (testMessage: string, botResponse: string, successCondition: string) => {
+  const res = await fetch(`${LOCAL_API}/eval/judge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testMessage, botResponse, successCondition }),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
+  return await res.json() as { pass: boolean; score: number; reason: string; detail?: string; method: string };
+};

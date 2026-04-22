@@ -22,6 +22,19 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace('/api/arena/chat-sessions', '/api/sessions'),
       },
+      // Compare Reports API → same standalone server
+      '/api/compare-reports': {
+        target: 'http://localhost:4001',
+        changeOrigin: true,
+      },
+      // Metrics, eval results, judge, search → local server
+      '/api/metrics':         { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/eval-results':    { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/eval/judge':      { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/sessions/search':     { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/sessions/questions':  { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/generate-questions':  { target: 'http://localhost:4001', changeOrigin: true },
+      '/api/questions-bank':      { target: 'http://localhost:4001', changeOrigin: true },
     },
   }
 })
