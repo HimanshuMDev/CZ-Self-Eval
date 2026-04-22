@@ -1,14 +1,13 @@
 import { DashboardProvider, useDashboard } from './store/DashboardContext';
 import NavigationRail from './components/NavigationRail';
 import ArenaView from './views/ArenaView';
-import EvidenceView from './views/EvidenceView';
 import HistoryView from './views/HistoryView';
 import SandboxView from './views/SandboxView';
 import ManualChatView from './views/ManualChatView';
 import ChatHistoryView from './views/ChatHistoryView';
 import EvalReviewView from './views/EvalReviewView';
 import MetricsDashboard from './views/MetricsDashboard';
-import GoldenSetView from './views/GoldenSetView';
+import EvalEvidenceView from './views/EvalEvidenceView';
 import EvalScoreView from './views/EvalScoreView';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -20,10 +19,9 @@ const VIEW_LABELS: Record<string, { title: string; sub: string; emoji: string }>
   'chat-history': { title: 'Chat History',         sub: 'Review & compare saved sessions',        emoji: '📋' },
   'eval-review':  { title: 'Eval Review',          sub: 'All flags & comments across sessions',    emoji: '📊' },
   sandbox:        { title: 'Questions Lab',        sub: 'Custom edge-case scenarios',             emoji: '🧪' },
-  evidence:       { title: 'Evidence Library',     sub: 'Known failing traces from LangSmith',   emoji: '🛡️' },
   metrics:        { title: 'Metrics Dashboard',    sub: 'Health scores, trends & analytics',     emoji: '📈' },
   history:        { title: 'Session History',      sub: 'Evaluation trajectory & scores',        emoji: '📊' },
-  golden:         { title: 'Golden Set',            sub: 'Locked baseline scenarios · CI gate',   emoji: '🏆' },
+  'eval-evidence':{ title: 'Eval Evidence',         sub: 'All agent datasets · grouped by agent', emoji: '🗂️' },
   'eval-score':   { title: 'CZ Agent Eval Score',   sub: 'Multi-judge composite score · CI-gated', emoji: '📈' },
 };
 
@@ -41,11 +39,10 @@ const ViewSwitcher = () => {
     case 'chat':         return <ManualChatView />;
     case 'chat-history': return <ChatHistoryView />;
     case 'eval-review':  return <EvalReviewView />;
-    case 'evidence':     return <EvidenceView />;
     case 'metrics':      return <MetricsDashboard />;
     case 'history':      return <HistoryView />;
     case 'sandbox':      return <SandboxView onStartScenario={handleStartScenario} />;
-    case 'golden':       return <GoldenSetView />;
+    case 'eval-evidence': return <EvalEvidenceView />;
     case 'eval-score':   return <EvalScoreView />;
     default:             return <ArenaView ref={arenaRef} />;
   }

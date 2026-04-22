@@ -1,8 +1,9 @@
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
-const { createGoldenRouter }   = require('./golden');
-const { createEvalRunsRouter } = require('./eval-runs');
+const { createGoldenRouter }       = require('./golden');
+const { createEvalRunsRouter }     = require('./eval-runs');
+const { createEvalEvidenceRouter } = require('./eval-evidence');
 
 const app = express();
 

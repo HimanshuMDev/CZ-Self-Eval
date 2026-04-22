@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Shield, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp, Award, Gauge } from 'lucide-react';
+import { Layout, History, Settings, Bot, FlaskConical, MessageCircle, ClipboardList, ChevronRight, BarChart2, TrendingUp, Database, Gauge } from 'lucide-react';
 import { useDashboard } from '../store/DashboardContext';
 
 const NavigationRail: React.FC = () => {
@@ -13,7 +13,7 @@ const NavigationRail: React.FC = () => {
         { id: 'chat',         icon: MessageCircle,label: 'Live Chat',       desc: 'Real-time chat test' },
         { id: 'chat-history', icon: ClipboardList, label: 'Chat History',  desc: 'Review sessions' },
         { id: 'eval-review',  icon: BarChart2,    label: 'Eval Review',    desc: 'All flags & comments' },
-        { id: 'golden',       icon: Award,        label: 'Golden Set',     desc: 'Locked baseline · CI' },
+        { id: 'eval-evidence', icon: Database,    label: 'Eval Evidence',  desc: 'All agent datasets' },
         { id: 'eval-score',   icon: Gauge,        label: 'Eval Score',     desc: 'CZ agent health score' },
       ]
     },
@@ -21,7 +21,6 @@ const NavigationRail: React.FC = () => {
       label: 'Tools',
       items: [
         { id: 'sandbox',  icon: FlaskConical, label: 'Questions Lab', desc: 'Edge-case scenarios' },
-        { id: 'evidence', icon: Shield,       label: 'Evidence',      desc: 'Failing traces' },
         { id: 'metrics',  icon: TrendingUp,   label: 'Metrics',       desc: 'Health & trends' },
         { id: 'history',  icon: History,      label: 'History',       desc: 'Eval trajectory' },
       ]
