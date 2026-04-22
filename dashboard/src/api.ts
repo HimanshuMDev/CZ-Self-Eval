@@ -527,3 +527,263 @@ export const runGoldenBatch = (
 
   return es;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CZ Eval Score — multi-judge composite score pipeline
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface RubricDim {
+  id: 'goal' | 'routing' | 'efficiency' | 'accuracy' | 'quality';
+  label?: string;
+  weight?: number;
+}
+
+export interface JudgeDetail {
+  judgeId: string;
+  backend: 'heuristic' | 'llm' | 'heuristic-fallback';
+  overall: number;
+  rationale: string;
+}
+
+export interface JudgeAggregate {
+  overall: number;
+  perDim: Partial<Record<RubricDim['id'], number>>;
+  agreement: number;
+  agreementTier?: 'strong' | 'moderate' | 'weak';
+  judges: JudgeDetail[];
+}
+
+export interface ScenarioRun {
+  pass: boolean;
+  score: number;
+  composite: number;
+  agentType: string | null;
+  responseTimeMs: number;
+  responseText: string;
+  judge: JudgeAggregate | null;
+  hallucination: boolean;
+  routingCorrect: boolean | null;
+  error?: string;
+  reason?: string;
+}
+
+export interface ScenarioScore {
+  scenarioId: string;
+  title: string;
+  category: string | null;
+  mustPass: boolean;
+  weight: number;
+  n: number;
+  medianScore: number;
+  stdevScore: number;
+  flakiness: number;
+  flakinessTier: 'stable' | 'wobbly' | 'flaky';
+  passRate: number;
+  overallPass: boolean;
+  regressionAlert: boolean;
+  perDim: Partial<Record<RubricDim['id'], number | null>>;
+  agreement: number | null;
+  hallucinationFreeRate: number;
+  routingAccuracy: number;
+  latencyRate: number;
+  medianLatency: number;
+  contribution?: number;
+  runs: ScenarioRun[];
+}
+
+export interface StatusBand {
+  min: number;
+  label: string;
+  color: string;
+  tone: 'green' | 'yellow' | 'orange' | 'red';
+}
+
+export interface EvalScoreComponents {
+  goldenPassRate: number;
+  rubricAvg: number;
+  hallucinationFree: number;
+  routingAccuracy: number;
+  latencySla: number;
+  weights: {
+    goldenPassRate: number;
+    rubricAvg: number;
+    hallucinationFree: number;
+    routingAccuracy: number;
+    latencySla: number;
+  };
+}
+
+export interface EvalScoreStats {
+  totalScenarios: number;
+  passed: number;
+  failed: number;
+  flaky: number;
+  mustPassTotal: number;
+  mustPassFailed: number;
+  avgAgreement: number;
+  avgFlakiness: number;
+}
+
+export interface EvalScoreReport {
+  empty?: boolean;
+  czScore: number;
+  confidence: number;
+  deltaVsBaseline: number | null;
+  baselineScore: number | null;
+  status: StatusBand;
+  components: EvalScoreComponents;
+  stats: EvalScoreStats;
+  scenarioBreakdown: ScenarioScore[];
+  lowAgreement: Array<{
+    scenarioId: string;
+    title: string;
+    agreement: number;
+    medianScore: number;
+  }>;
+  failing: Array<{
+    scenarioId: string;
+    title: string;
+    weight: number;
+    medianScore: number;
+    reason: string;
+  }>;
+  meta: {
+    runId?: string;
+    agentUrl?: string;
+    n?: number;
+    scope?: string;
+    tags?: string[] | null;
+    useLlm?: boolean;
+    startedAt?: string;
+    configHash?: string;
+    rubricVersion?: string;
+    computedAt?: string;
+    nodeVersion?: string;
+  };
+}
+
+export interface EvalTrendPoint {
+  id: string;
+  runAt: string;
+  czScore: number;
+  confidence?: number;
+  status: string;
+  statusTone: 'green' | 'yellow' | 'orange' | 'red';
+  passed: number;
+  failed: number;
+  flaky: number;
+}
+
+export interface EvalRunHeader {
+  id: string;
+  czScore: number;
+  confidence?: number;
+  status: string;
+  statusTone: 'green' | 'yellow' | 'orange' | 'red';
+  deltaVsBaseline: number | null;
+  scope: string;
+  n: number;
+  passed: number;
+  failed: number;
+  flaky: number;
+  runAt: string;
+  configHash?: string;
+  error?: string;
+}
+
+export type EvalStreamEvent =
+  | { type: 'start'; total: number; n: number; scope: string }
+  | { type: 'scenario-start'; scenarioId: string; title: string; idx: number; total: number }
+  | { type: 'scenario-done'; scenarioResult: ScenarioScore; idx: number; total: number }
+  | { type: 'progress'; done: number; total: number }
+  | { type: 'complete'; report: EvalScoreReport }
+  | { type: 'error'; message: string };
+
+export interface EvalRunOptions {
+  n?: number;
+  scope?: 'mustPass' | 'all' | 'tag';
+  tags?: string[];
+  useLlm?: boolean;
+  agentUrl?: string;
+}
+
+export const fetchLatestEvalScore = async (): Promise<EvalScoreReport> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/latest`);
+  if (!res.ok) throw new Error(`Failed to fetch latest eval score (${res.status})`);
+  return res.json();
+};
+
+export const fetchEvalTrend = async (days = 30): Promise<{ days: number; count: number; series: EvalTrendPoint[] }> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/trend?days=${days}`);
+  if (!res.ok) throw new Error(`Failed to fetch trend (${res.status})`);
+  return res.json();
+};
+
+export const fetchEvalRuns = async (): Promise<{ count: number; runs: EvalRunHeader[] }> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/runs`);
+  if (!res.ok) throw new Error(`Failed to fetch runs (${res.status})`);
+  return res.json();
+};
+
+export const fetchEvalRun = async (id: string): Promise<EvalScoreReport> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/runs/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch run (${res.status})`);
+  return res.json();
+};
+
+export const deleteEvalRun = async (id: string): Promise<{ ok: boolean }> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/runs/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Failed to delete run (${res.status})`);
+  return res.json();
+};
+
+export interface EvalRunCallbacks {
+  onEvent?: (evt: EvalStreamEvent) => void;
+  onComplete?: (report: EvalScoreReport) => void;
+  onError?: (err: { message: string }) => void;
+}
+
+export interface StartedEvalRun {
+  runId: string;
+  streamUrl: string;
+  es: EventSource;
+  close: () => void;
+}
+
+export const startEvalRun = async (
+  opts: EvalRunOptions,
+  cb: EvalRunCallbacks = {}
+): Promise<StartedEvalRun> => {
+  const res = await fetch(`${LOCAL_API}/eval-score/run`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) throw new Error(`Failed to start eval run (${res.status})`);
+  const { runId, streamUrl } = await res.json();
+
+  const es = new EventSource(streamUrl);
+  es.onmessage = (e) => {
+    let evt: EvalStreamEvent;
+    try { evt = JSON.parse((e as MessageEvent).data); } catch { return; }
+    try { cb.onEvent?.(evt); } catch (err) { console.error(err); }
+    if (evt.type === 'complete') {
+      try { cb.onComplete?.(evt.report); } catch (err) { console.error(err); }
+      es.close();
+    } else if (evt.type === 'error') {
+      try { cb.onError?.({ message: evt.message }); } catch (err) { console.error(err); }
+      es.close();
+    }
+  };
+  es.onerror = () => {
+    try { cb.onError?.({ message: 'SSE stream closed' }); } catch (err) { console.error(err); }
+    es.close();
+  };
+
+  return {
+    runId,
+    streamUrl,
+    es,
+    close: () => es.close(),
+  };
+};
