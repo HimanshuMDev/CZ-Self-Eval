@@ -16,6 +16,12 @@ mongoose.connect(MONGODB_URI)
       console.log(`     DELETE /api/sessions/:id`);
       console.log(`     GET    /api/sessions/export/all`);
       console.log(`     GET    /api/stats`);
+      console.log(`     GET    /api/golden               (list golden scenarios)`);
+      console.log(`     POST   /api/golden               (create)`);
+      console.log(`     PUT    /api/golden/:id           (update)`);
+      console.log(`     DELETE /api/golden/:id           (delete)`);
+      console.log(`     POST   /api/golden/:id/run       (run scenario N times)`);
+      console.log(`     GET    /api/golden/run-all/stream (SSE batch runner)`);
     });
   })
   .catch(err => {

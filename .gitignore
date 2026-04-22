@@ -3,3 +3,13 @@ node_modules
 */node_modules
 dashboard/dist
 .env
+
+# OS + editor cruft
+.DS_Store
+**/.DS_Store
+.claude/
+
+# CI eval runner artefacts (generated per-run)
+eval-report.json
+eval-report.md
+
