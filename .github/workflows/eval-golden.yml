@@ -1,0 +1,164 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CZ AI Agent — Golden Set evaluation gate
+#
+# Runs the locked Golden Set scenarios against the live CZ AI agent on every
+# PR targeting `main`. If any must-pass scenario regresses, the merge is
+# blocked. A markdown summary is posted to the Actions "step summary" and a
+# compact comment is added to the PR.
+#
+# Triggers:
+#   · pull_request to main (when self-eval files change)
+#   · weekly schedule — catches drift even when no PR is open
+#   · manual via workflow_dispatch (with an optional --all flag)
+#
+# Secrets expected in repo → Settings → Secrets and variables → Actions:
+#   CZ_AGENT_URL     (optional — defaults to dev endpoint inside the script)
+#   CZ_AGENT_TOKEN   (optional — bearer token if the dev agent requires auth)
+# ─────────────────────────────────────────────────────────────────────────────
+name: Golden Set Eval
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'data/golden.json'
+      - 'server/golden.js'
+      - 'scripts/run-golden-ci.js'
+      - '.github/workflows/eval-golden.yml'
+      - 'package.json'
+  schedule:
+    # Every weekday at 06:15 UTC — a dawn smoke test so regressions don't
+    # live unnoticed over a weekend.
+    - cron: '15 6 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Scope of scenarios to run'
+        required: true
+        default: 'must-pass'
+        type: choice
+        options:
+          - must-pass
+          - all
+      n:
+        description: 'Runs per scenario (N)'
+        required: true
+        default: '3'
+        type: string
+
+# Cancel in-flight runs for the same PR to save CI minutes
+concurrency:
+  group: eval-golden-${{ github.ref }}
+  cancel-in-progress: true
+
+# The workflow only needs to read code and, if we post a PR comment, write
+# pull-request comments. No other permissions.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  golden:
+    name: Golden Set (N=${{ inputs.n || '3' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Falls back to the dev endpoint inside the script if unset
+      CZ_AGENT_URL:   ${{ secrets.CZ_AGENT_URL }}
+      CZ_AGENT_TOKEN: ${{ secrets.CZ_AGENT_TOKEN }}
+      CZ_USER_ID:     whatsapp:+919999999000
+      CZ_TIMEOUT_MS:  '60000'
+      NO_COLOR:       '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # The CLI runner only needs the root-level deps (express/mongoose are not
+      # used at runtime by the script itself, but reusing the root lockfile
+      # keeps Node version + audit consistent).
+      - name: Install dependencies
+        run: npm ci --ignore-scripts || npm install --ignore-scripts
+
+      - name: Run Golden Set
+        id: eval
+        run: |
+          set +e
+          if [ "${{ inputs.scope }}" = "all" ]; then
+            node scripts/run-golden-ci.js --all --n "${{ inputs.n || '3' }}" \
+              --out eval-report.json --md eval-report.md
+          else
+            node scripts/run-golden-ci.js --n "${{ inputs.n || '3' }}" \
+              --out eval-report.json --md eval-report.md
+          fi
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-set-report-${{ github.run_id }}
+          path: |
+            eval-report.json
+            eval-report.md
+          retention-days: 30
+
+      - name: Post PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body;
+            try {
+              body = fs.readFileSync('eval-report.md', 'utf8');
+            } catch {
+              body = '⚠️ Golden Set runner did not produce a report. Check the Actions logs.';
+            }
+
+            // Trim to GitHub's 65 535-char comment limit with a safety margin.
+            const MAX = 60000;
+            if (body.length > MAX) {
+              body = body.slice(0, MAX) +
+                '\n\n> _Report truncated — see the `golden-set-report-' +
+                context.runId + '` artifact for the full markdown/JSON._';
+            }
+
+            // Find existing bot comment and update in place (avoids spam on rerun).
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const marker = '<!-- cz-golden-eval -->';
+            const stamped = marker + '\n' + body;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find(c =>
+              c.user?.type === 'Bot' && (c.body || '').includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body: stamped,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body: stamped,
+              });
+            }
+
+      - name: Enforce gate
+        if: always()
+        run: |
+          code="${{ steps.eval.outputs.exit_code }}"
+          echo "Runner exit code: $code"
+          if [ "$code" != "0" ]; then
+            echo "::error title=Golden Set regression::At least one must-pass scenario failed — see the PR comment or the uploaded report for details."
+            exit 1
+          fi

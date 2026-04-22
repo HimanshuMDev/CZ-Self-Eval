@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "concurrently --names \"server,dashboard\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run dev --prefix server\" \"npm run dev --prefix dashboard\"",
     "build": "npm install --prefix dashboard && npm run build --prefix dashboard",
-    "install:all": "npm install && npm install --prefix server && npm install --prefix dashboard"
+    "install:all": "npm install && npm install --prefix server && npm install --prefix dashboard",
+    "eval:ci":     "node scripts/run-golden-ci.js",
+    "eval:ci:all": "node scripts/run-golden-ci.js --all --n 3"
   },
   "dependencies": {
     "cors": "^2.8.5",
