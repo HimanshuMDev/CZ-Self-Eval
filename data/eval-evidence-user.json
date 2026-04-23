@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-23T05:14:20.547Z",
+  "scenarios": [
+    {
+      "id": "user-mob10aly-b4fe9f",
+      "name": "Mined: I want to start a charging session",
+      "agent": "support",
+      "kind": "single",
+      "tags": [
+        "chat-mined",
+        "heuristic"
+      ],
+      "caseType": "positive",
+      "evalType": "regression",
+      "source": "user-generated",
+      "createdAt": "2026-04-23T05:13:27.479Z",
+      "origin": {
+        "kind": "chat-mined",
+        "sessionIds": [
+          "chat_1776671451748_w34kp",
+          "chat_1776840960175_b89tk"
+        ],
+        "llmBackend": "heuristic-fallback"
+      },
+      "task": {
+        "id": "user-mob10aly-b4fe9f",
+        "name": "Mined: I want to start a charging session",
+        "description": "Locks in first-turn behaviour from session chat_1776671451748_w34kp.",
+        "tags": [
+          "chat-mined",
+          "heuristic"
+        ],
+        "caseType": "positive",
+        "evalType": "regression",
+        "input": {
+          "userMessage": "I want to start a charging session",
+          "userId": "eval-mined-mob10aly",
+          "channel": "whatsapp"
+        },
+        "codeGradedCriteria": {
+          "expectedAgentType": "support",
+          "responseMustBeNonEmpty": true,
+          "responseMustContainOneOf": [],
+          "responseMustNotContain": [
+            "I encountered an issue"
+          ]
+        }
+      }
+    },
+    {
+      "id": "user-mob10aly-ef29db",
+      "name": "Mined: What is my wallet balance?",
+      "agent": "support",
+      "kind": "single",
+      "tags": [
+        "chat-mined",
+        "heuristic"
+      ],
+      "caseType": "positive",
+      "evalType": "regression",
+      "source": "user-generated",
+      "createdAt": "2026-04-23T05:13:27.479Z",
+      "origin": {
+        "kind": "chat-mined",
+        "sessionIds": [
+          "chat_1776671451748_w34kp",
+          "chat_1776840960175_b89tk"
+        ],
+        "llmBackend": "heuristic-fallback"
+      },
+      "task": {
+        "id": "user-mob10aly-ef29db",
+        "name": "Mined: What is my wallet balance?",
+        "description": "Locks in first-turn behaviour from session chat_1776840960175_b89tk.",
+        "tags": [
+          "chat-mined",
+          "heuristic"
+        ],
+        "caseType": "positive",
+        "evalType": "regression",
+        "input": {
+          "userMessage": "What is my wallet balance?",
+          "userId": "eval-mined-mob10aly",
+          "channel": "whatsapp"
+        },
+        "codeGradedCriteria": {
+          "expectedAgentType": "support",
+          "responseMustBeNonEmpty": true,
+          "responseMustContainOneOf": [],
+          "responseMustNotContain": [
+            "I encountered an issue"
+          ]
+        }
+      }
+    }
+  ]
+}

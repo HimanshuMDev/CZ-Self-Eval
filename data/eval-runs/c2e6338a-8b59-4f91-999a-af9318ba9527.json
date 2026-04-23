@@ -1,0 +1,2477 @@
+{
+  "czScore": 77.2,
+  "confidence": 0.2,
+  "deltaVsBaseline": 13.8,
+  "baselineScore": 63.4,
+  "status": {
+    "min": 70,
+    "label": "Watch",
+    "color": "#f59e0b",
+    "tone": "yellow"
+  },
+  "components": {
+    "goldenPassRate": 86.2,
+    "rubricAvg": 75.6,
+    "hallucinationFree": 100,
+    "routingAccuracy": 0,
+    "latencySla": 100,
+    "weights": {
+      "goldenPassRate": 0.4,
+      "rubricAvg": 0.3,
+      "hallucinationFree": 0.15,
+      "routingAccuracy": 0.1,
+      "latencySla": 0.05
+    }
+  },
+  "stats": {
+    "totalScenarios": 29,
+    "passed": 25,
+    "failed": 4,
+    "flaky": 0,
+    "mustPassTotal": 29,
+    "mustPassFailed": 4,
+    "avgAgreement": 0.989,
+    "avgFlakiness": 0
+  },
+  "scenarioBreakdown": [
+    {
+      "scenarioId": "reg-flow-05",
+      "title": "Mid-registration — off-topic message treated as name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 85.1,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 259,
+      "runs": [
+        {
+          "pass": true,
+          "score": 1,
+          "composite": 85.1,
+          "agentType": "support",
+          "responseTimeMs": 259,
+          "responseText": "Got it! Should I register you as *Stop Charging*?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "flowTurns": [
+        {
+          "label": "Turn 1",
+          "userMessage": "stop my charging session",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 51,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 2",
+          "userMessage": "Stop Charging",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Stop Charging*?",
+          "responseTimeMs": 466,
+          "failures": [],
+          "missing": []
+        }
+      ],
+      "agent": "new-user",
+      "kind": "flow",
+      "contribution": 2.93
+    },
+    {
+      "scenarioId": "new-user-005",
+      "title": "Cold entry — QR scan / charger ID",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 82.5,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 8
+      },
+      "agreement": 0.99,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2134,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.9,
+          "composite": 82.5,
+          "agentType": "discovery",
+          "responseTimeMs": 2134,
+          "responseText": "*ATZ02* is currently unavailable. Let me check other options for you.\n\nI'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.5,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 8
+            },
+            "agreement": 0.99,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.46,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.58,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.84
+    },
+    {
+      "scenarioId": "new-user-024",
+      "title": "Post-registration — skip vehicle",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 81,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 8
+      },
+      "agreement": 0.99,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 42,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.87,
+          "composite": 81,
+          "agentType": "orchestrator",
+          "responseTimeMs": 42,
+          "responseText": "No problem! You can add your EV anytime by saying *\"add my vehicle\"*. 🚗\n\nHow can I help you today?",
+          "judge": {
+            "overall": 7.5,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 8
+            },
+            "agreement": 0.99,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.46,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.58,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.79
+    },
+    {
+      "scenarioId": "new-user-008",
+      "title": "Cold entry — RFID / loyalty query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 79,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2729,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.84,
+          "composite": 79,
+          "agentType": "support",
+          "responseTimeMs": 2729,
+          "responseText": "I encountered an issue processing your request. Please try again or contact ChargeZone support at su@chargezone.in.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.72
+    },
+    {
+      "scenarioId": "reg-flow-03",
+      "title": "Name rejection → re-entry → success",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 0,
+      "overallPass": false,
+      "regressionAlert": true,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 245,
+      "runs": [
+        {
+          "pass": false,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "support",
+          "responseTimeMs": 245,
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "flowTurns": [
+        {
+          "label": "Turn 1",
+          "userMessage": "Hello",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 48,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 2",
+          "userMessage": "Kiran",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Kiran*?",
+          "responseTimeMs": 618,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 3",
+          "userMessage": "no",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 40,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 4",
+          "userMessage": "Kiran Patel",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Kiran Patel*?",
+          "responseTimeMs": 469,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 5",
+          "userMessage": "",
+          "pass": false,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "responseTimeMs": 50,
+          "failures": [],
+          "missing": [
+            "turn 5: missing any of [Account created, ✅, wallet starts]"
+          ]
+        }
+      ],
+      "agent": "new-user",
+      "kind": "flow",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-002",
+      "title": "Cold entry — wallet balance query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 3038,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "payment",
+          "responseTimeMs": 3038,
+          "responseText": "Something went wrong with your payment query. Please try again.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-004",
+      "title": "Cold entry — stop charging query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2252,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "session",
+          "responseTimeMs": 2252,
+          "responseText": "I'm having trouble right now. Would you like to find a charger nearby?",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-006",
+      "title": "Cold entry — invoice / support query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 3289,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "payment",
+          "responseTimeMs": 3289,
+          "responseText": "Something went wrong with your payment query. Please try again.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-009",
+      "title": "Cold entry — booking history query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2701,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "session",
+          "responseTimeMs": 2701,
+          "responseText": "I'm having trouble right now. Would you like to find a charger nearby?",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-010",
+      "title": "Cold entry — top up wallet",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2961,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "payment",
+          "responseTimeMs": 2961,
+          "responseText": "Something went wrong with your payment query. Please try again.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "new-user-015",
+      "title": "Name input — wallet balance during awaiting_name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 77,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2976,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.8,
+          "composite": 77,
+          "agentType": "payment",
+          "responseTimeMs": 2976,
+          "responseText": "Something went wrong with your payment query. Please try again.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.66
+    },
+    {
+      "scenarioId": "reg-flow-01",
+      "title": "Happy path — full registration + skip vehicle",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 75,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 0,
+      "overallPass": false,
+      "regressionAlert": true,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 8
+      },
+      "agreement": 0.99,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 172,
+      "runs": [
+        {
+          "pass": false,
+          "score": 0.75,
+          "composite": 75,
+          "agentType": "support",
+          "responseTimeMs": 172,
+          "responseText": "No problem! You can add your EV anytime by saying *\"add my vehicle\"*. 🚗\n\nHow can I help you today?",
+          "judge": {
+            "overall": 7.5,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 8
+            },
+            "agreement": 0.99,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.46,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.58,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "flowTurns": [
+        {
+          "label": "Turn 1",
+          "userMessage": "Hi, I want to charge my car",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 51,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 2",
+          "userMessage": "Rahul Sharma",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Rahul Sharma*?",
+          "responseTimeMs": 538,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 3",
+          "userMessage": "yes",
+          "pass": false,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "responseTimeMs": 50,
+          "failures": [],
+          "missing": [
+            "turn 3: missing any of [Account created, ✅, Rahul]"
+          ]
+        },
+        {
+          "label": "Turn 4",
+          "userMessage": "",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "No problem! You can add your EV anytime by saying *\"add my vehicle\"*. 🚗\n\nHow can I help you today?",
+          "responseTimeMs": 49,
+          "failures": [],
+          "missing": []
+        }
+      ],
+      "agent": "new-user",
+      "kind": "flow",
+      "contribution": 2.59
+    },
+    {
+      "scenarioId": "new-user-003",
+      "title": "Cold entry — find chargers query",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2656,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2656,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-007",
+      "title": "Cold entry — Hindi message",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2868,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2868,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-011",
+      "title": "Name input — valid full name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2853,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2853,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-012",
+      "title": "Name input — single word (first name only)",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2160,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2160,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-013",
+      "title": "Name input — name with numbers (invalid)",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2360,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2360,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-014",
+      "title": "Name input — symbols only (invalid)",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2107,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2107,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-016",
+      "title": "Name input — mixed alpha and digits",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2047,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2047,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-017",
+      "title": "Name input — three part name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2797,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2797,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-018",
+      "title": "Confirm step — typed \"yes\"",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 1943,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 1943,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-019",
+      "title": "Confirm step — typed \"haan\" (Hindi affirmative)",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2765,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2765,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-020",
+      "title": "Confirm step — typed \"no\"",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2258,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2258,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-021",
+      "title": "Confirm step — typed \"nahi\" (Hindi negative)",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2247,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2247,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-022",
+      "title": "Confirm step — button tap reg:confirm_name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 2509,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 2509,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-023",
+      "title": "Confirm step — button tap reg:reenter_name",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.6,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 1917,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.79,
+          "composite": 74.6,
+          "agentType": "discovery",
+          "responseTimeMs": 1917,
+          "responseText": "I'm having trouble right now. Would you like to try again?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.57
+    },
+    {
+      "scenarioId": "new-user-001",
+      "title": "Cold entry — generic greeting",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 74.1,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 1,
+      "overallPass": true,
+      "regressionAlert": false,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 7,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.988,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 85,
+      "runs": [
+        {
+          "pass": true,
+          "score": 0.78,
+          "composite": 74.1,
+          "agentType": "orchestrator",
+          "responseTimeMs": 85,
+          "responseText": "DOCO test, ready to charge your EV?",
+          "judge": {
+            "overall": 7.02,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 7,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.988,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.02,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.14,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "agent": "new-user",
+      "kind": "single",
+      "contribution": 2.56
+    },
+    {
+      "scenarioId": "reg-flow-02",
+      "title": "Happy path — wallet balance first, then registers",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 70.5,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 0,
+      "overallPass": false,
+      "regressionAlert": true,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 185,
+      "runs": [
+        {
+          "pass": false,
+          "score": 0.67,
+          "composite": 70.5,
+          "agentType": "support",
+          "responseTimeMs": 185,
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "flowTurns": [
+        {
+          "label": "Turn 1",
+          "userMessage": "what is my wallet balance",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 50,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 2",
+          "userMessage": "Priya Verma",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Priya Verma*?",
+          "responseTimeMs": 459,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 3",
+          "userMessage": "haan",
+          "pass": false,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "responseTimeMs": 46,
+          "failures": [],
+          "missing": [
+            "turn 3: missing any of [Account created, ✅, Priya]"
+          ]
+        }
+      ],
+      "agent": "new-user",
+      "kind": "flow",
+      "contribution": 2.43
+    },
+    {
+      "scenarioId": "reg-flow-04",
+      "title": "Invalid name → retry → success",
+      "category": "new-user",
+      "mustPass": true,
+      "weight": 3,
+      "n": 1,
+      "medianScore": 62,
+      "stdevScore": 0,
+      "flakiness": 0,
+      "flakinessTier": "stable",
+      "passRate": 0,
+      "overallPass": false,
+      "regressionAlert": true,
+      "perDim": {
+        "goal": 6,
+        "routing": 8,
+        "efficiency": 9,
+        "accuracy": 9,
+        "quality": 7
+      },
+      "agreement": 0.989,
+      "hallucinationFreeRate": 1,
+      "routingAccuracy": 0,
+      "latencyRate": 1,
+      "medianLatency": 894,
+      "runs": [
+        {
+          "pass": false,
+          "score": 0.5,
+          "composite": 62,
+          "agentType": "support",
+          "responseTimeMs": 894,
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "judge": {
+            "overall": 7.4,
+            "perDim": {
+              "goal": 6,
+              "routing": 8,
+              "efficiency": 9,
+              "accuracy": 9,
+              "quality": 7
+            },
+            "agreement": 0.989,
+            "agreementTier": "strong",
+            "judges": [
+              {
+                "judgeId": "balanced",
+                "backend": "heuristic",
+                "overall": 7.4,
+                "rationale": "[Balanced] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "strict",
+                "backend": "heuristic",
+                "overall": 7.37,
+                "rationale": "[Strict] all dimensions within acceptable range"
+              },
+              {
+                "judgeId": "safety",
+                "backend": "heuristic",
+                "overall": 7.5,
+                "rationale": "[Safety-focused] all dimensions within acceptable range"
+              }
+            ]
+          },
+          "hallucination": false,
+          "routingCorrect": null
+        }
+      ],
+      "flowTurns": [
+        {
+          "label": "Turn 1",
+          "userMessage": "Hi",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Welcome to ChargeZone! ⚡\n\nTo create your account, please tell me your full name.\n_(e.g. Rahul Sharma)_",
+          "responseTimeMs": 50,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 2",
+          "userMessage": "9900253603",
+          "pass": false,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "I'd love to help with that! But first, I need to create your ChargeZone account.\n\nPlease share your full name _(e.g. Rahul Sharma)_ to get started.",
+          "responseTimeMs": 3076,
+          "failures": [],
+          "missing": [
+            "turn 2: missing any of [couldn't read, letters only]"
+          ]
+        },
+        {
+          "label": "Turn 3",
+          "userMessage": "Arjun Singh",
+          "pass": true,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Got it! Should I register you as *Arjun Singh*?",
+          "responseTimeMs": 391,
+          "failures": [],
+          "missing": []
+        },
+        {
+          "label": "Turn 4",
+          "userMessage": "yes",
+          "pass": false,
+          "routingOk": true,
+          "agentType": "support",
+          "responseText": "Sorry, we couldn't create your account right now. Please try again in a moment, or contact us at support@chargezone.in.",
+          "responseTimeMs": 57,
+          "failures": [],
+          "missing": [
+            "turn 4: missing any of [Account created, ✅, Arjun]"
+          ]
+        }
+      ],
+      "agent": "new-user",
+      "kind": "flow",
+      "contribution": 2.14
+    }
+  ],
+  "lowAgreement": [
+    {
+      "scenarioId": "reg-flow-05",
+      "title": "Mid-registration — off-topic message treated as name",
+      "agreement": 0.988,
+      "medianScore": 85.1
+    },
+    {
+      "scenarioId": "new-user-001",
+      "title": "Cold entry — generic greeting",
+      "agreement": 0.988,
+      "medianScore": 74.1
+    },
+    {
+      "scenarioId": "new-user-003",
+      "title": "Cold entry — find chargers query",
+      "agreement": 0.988,
+      "medianScore": 74.6
+    },
+    {
+      "scenarioId": "new-user-007",
+      "title": "Cold entry — Hindi message",
+      "agreement": 0.988,
+      "medianScore": 74.6
+    },
+    {
+      "scenarioId": "new-user-011",
+      "title": "Name input — valid full name",
+      "agreement": 0.988,
+      "medianScore": 74.6
+    }
+  ],
+  "failing": [
+    {
+      "scenarioId": "reg-flow-04",
+      "title": "Invalid name → retry → success",
+      "weight": 3,
+      "medianScore": 62,
+      "reason": "see run detail"
+    },
+    {
+      "scenarioId": "reg-flow-02",
+      "title": "Happy path — wallet balance first, then registers",
+      "weight": 3,
+      "medianScore": 70.5,
+      "reason": "see run detail"
+    },
+    {
+      "scenarioId": "reg-flow-01",
+      "title": "Happy path — full registration + skip vehicle",
+      "weight": 3,
+      "medianScore": 75,
+      "reason": "see run detail"
+    },
+    {
+      "scenarioId": "reg-flow-03",
+      "title": "Name rejection → re-entry → success",
+      "weight": 3,
+      "medianScore": 77,
+      "reason": "see run detail"
+    }
+  ],
+  "meta": {
+    "runId": "c2e6338a-8b59-4f91-999a-af9318ba9527",
+    "agentUrl": "default",
+    "n": 1,
+    "scope": "agent",
+    "tags": null,
+    "useLlm": false,
+    "startedAt": "2026-04-23T05:46:09.469Z",
+    "nodeVersion": "v24.7.0",
+    "configHash": "d62175bf3d9d",
+    "rubricVersion": "1.0.0",
+    "computedAt": "2026-04-23T05:46:09.470Z"
+  }
+}

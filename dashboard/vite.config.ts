@@ -37,6 +37,8 @@ export default defineConfig({
       '/api/questions-bank':      { target: 'http://localhost:4001', changeOrigin: true },
       '/api/golden':              { target: 'http://localhost:4001', changeOrigin: true },
       '/api/eval-score':          { target: 'http://localhost:4001', changeOrigin: true },
+      // Eval Evidence — user-authored store + AI generator endpoints
+      '/api/eval-evidence':       { target: 'http://localhost:4001', changeOrigin: true },
     },
   }
 })

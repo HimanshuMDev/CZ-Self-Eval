@@ -4,6 +4,8 @@ const cors     = require('cors');
 const { createGoldenRouter }       = require('./golden');
 const { createEvalRunsRouter }     = require('./eval-runs');
 const { createEvalEvidenceRouter } = require('./eval-evidence');
+const { createEvalEvidenceUserRouter }      = require('./eval-evidence-user');
+const { createEvalEvidenceGeneratorRouter } = require('./eval-evidence-gen');
 
 const app = express();
 
@@ -109,6 +111,46 @@ const EvalResultSchema = new mongoose.Schema({
 }, { timestamps: false, versionKey: false });
 
 const EvalResult = mongoose.models.EvalResult || mongoose.model('EvalResult', EvalResultSchema);
+
+// ─── Eval Run (full CZ Score report) Schema ───────────────────────────────────
+//
+// Every Eval Score run produces a complete report that the dashboard lists
+// under "Recent runs" and loads on click. We persist both to disk (source of
+// truth, git-friendly) AND here in Mongo so the history can be queried /
+// managed from anywhere — MongoDB Compass, another dashboard, bulk exports.
+//
+// The `report` field is the full EvalScoreReport blob as produced by
+// server/score.js — same shape as `data/eval-runs/<runId>.json`. The top-
+// level fields are denormalised for fast indexed queries without unpacking
+// the embedded blob.
+
+const EvalRunSchema = new mongoose.Schema({
+  runId:           { type: String, required: true, unique: true, index: true },
+  czScore:         { type: Number, index: true },
+  confidence:      { type: Number, default: null },
+  status:          { type: String, index: true },
+  statusTone:      { type: String },
+  deltaVsBaseline: { type: Number, default: null },
+  scope:           { type: String, index: true },
+  n:               { type: Number },
+  passed:          { type: Number, default: 0 },
+  failed:          { type: Number, default: 0 },
+  flaky:           { type: Number, default: 0 },
+  totalScenarios:  { type: Number, default: 0 },
+  mustPassFailed:  { type: Number, default: 0 },
+  configHash:      { type: String, index: true },
+  useLlm:          { type: Boolean, default: false },
+  tags:            { type: [String], default: [] },
+  agents:          { type: [String], default: [] },
+  runAt:           { type: String, required: true, index: true },
+  computedAt:      { type: String },
+  nodeVersion:     { type: String },
+  error:           { type: String, default: null },
+  // Full report blob — same shape as data/eval-runs/<runId>.json
+  report:          { type: mongoose.Schema.Types.Mixed, required: true },
+}, { timestamps: true, versionKey: false });
+
+const EvalRun = mongoose.models.EvalRun || mongoose.model('EvalRun', EvalRunSchema);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1091,6 +1133,8 @@ app.use('/api/eval-results',        evalRouter);
 app.use('/api/questions-bank',      qbRouter);
 app.use('/api/golden',              createGoldenRouter());
 app.use('/api/eval-score',          createEvalRunsRouter());
+app.use('/api/eval-evidence/user',     createEvalEvidenceUserRouter());
+app.use('/api/eval-evidence/generate', createEvalEvidenceGeneratorRouter());
 
 // ─── Serve dashboard in production ───────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {

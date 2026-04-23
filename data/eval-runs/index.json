@@ -1,5 +1,35 @@
 [
   {
+    "id": "c2e6338a-8b59-4f91-999a-af9318ba9527",
+    "czScore": 77.2,
+    "confidence": 0.2,
+    "status": "Watch",
+    "statusTone": "yellow",
+    "deltaVsBaseline": 13.8,
+    "scope": "agent",
+    "n": 1,
+    "passed": 25,
+    "failed": 4,
+    "flaky": 0,
+    "runAt": "2026-04-23T05:46:09.474Z",
+    "configHash": "d62175bf3d9d"
+  },
+  {
+    "id": "16a5de86-3343-4369-bc0c-6d3513d1377c",
+    "czScore": 83.4,
+    "confidence": 0.6,
+    "status": "Healthy",
+    "statusTone": "green",
+    "deltaVsBaseline": 20,
+    "scope": "agent",
+    "n": 1,
+    "passed": 29,
+    "failed": 7,
+    "flaky": 0,
+    "runAt": "2026-04-23T05:37:49.021Z",
+    "configHash": "d62175bf3d9d"
+  },
+  {
     "id": "225918db-259c-465f-9884-0a2c126011b7",
     "czScore": 62.9,
     "confidence": 0.5,

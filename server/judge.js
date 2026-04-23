@@ -196,13 +196,18 @@ function runHeuristicJudge(persona, { text, scenario, observedSubAgent }) {
 }
 
 // ─── LLM judge (pluggable) ─────────────────────────────────────────────────
-// If OPENAI_API_KEY or ANTHROPIC_API_KEY is set, hit the respective API.
-// Otherwise we fall back to heuristic. This lets the same pipeline work in
-// dev, in CI without secrets, and in full production.
+// Backend selection ladder — tries in order:
+//   1. Anthropic  (if ANTHROPIC_API_KEY)
+//   2. OpenAI     (if OPENAI_API_KEY)
+//   3. Gemini     (if GEMINI_API_KEY)
+//   4. Heuristic  (no API keys required)
+// Lets the same pipeline work in dev, CI without secrets, and full production.
 async function runLlmJudge(persona, { text, scenario, observedSubAgent }) {
-  // Until API keys are wired by the user, we short-circuit to heuristic.
-  // The stub below documents the contract so upgrading is a one-file change.
-  if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  if (
+    !process.env.OPENAI_API_KEY &&
+    !process.env.ANTHROPIC_API_KEY &&
+    !process.env.GEMINI_API_KEY
+  ) {
     return runHeuristicJudge(persona, { text, scenario, observedSubAgent });
   }
 
@@ -236,6 +241,10 @@ ${text}
 
   // Light-weight fetch — implementation intentionally minimal. Replace with
   // the Anthropic/OpenAI SDK once keys are wired.
+  // Per-call timeout so a hanging LLM can't freeze the pipeline. 30s is enough
+  // for any reasonable judge completion — longer and something is wrong.
+  const JUDGE_TIMEOUT_MS = Math.max(5_000, parseInt(process.env.CZ_JUDGE_TIMEOUT_MS, 10) || 30_000);
+
   try {
     if (process.env.ANTHROPIC_API_KEY) {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -252,6 +261,7 @@ ${text}
           system: 'Output ONLY a single JSON object. No prose.',
           messages: [{ role: 'user', content: prompt }],
         }),
+        signal: AbortSignal.timeout(JUDGE_TIMEOUT_MS),
       });
       const body = await r.json();
       const raw = body?.content?.[0]?.text || '';
@@ -274,10 +284,39 @@ ${text}
             { role: 'user', content: prompt },
           ],
         }),
+        signal: AbortSignal.timeout(JUDGE_TIMEOUT_MS),
       });
       const body = await r.json();
       const raw = body?.choices?.[0]?.message?.content || '';
       const parsed = JSON.parse(raw);
+      return normaliseLlmJudge(persona, parsed);
+    }
+    if (process.env.GEMINI_API_KEY) {
+      const model = process.env.CZ_JUDGE_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: 'user',
+              parts: [{ text: `You must respond with ONLY a single JSON object, no prose, no markdown.\n\n${prompt}` }],
+            }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: Math.max(600, parseInt(process.env.GEMINI_MAX_TOKENS, 10) || 2048),
+              responseMimeType: 'application/json',
+            },
+          }),
+          signal: AbortSignal.timeout(JUDGE_TIMEOUT_MS),
+        },
+      );
+      const body = await r.json();
+      const raw = body?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      // Gemini occasionally wraps JSON in ```json fences even with responseMimeType
+      const cleaned = raw.replace(/```(?:json)?/g, '').trim();
+      const parsed = JSON.parse(cleaned);
       return normaliseLlmJudge(persona, parsed);
     }
   } catch (err) {

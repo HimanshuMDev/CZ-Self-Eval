@@ -1403,6 +1403,17 @@ function RunConfigModal({
   const [n, setN] = useState(defaults.n ?? 3);
   const [scope, setScope] = useState<EvalRunOptions['scope']>(defaults.scope ?? 'mustPass');
   const [useLlm, setUseLlm] = useState(!!defaults.useLlm);
+  // When scope = 'agent', which sub-agent(s) to target. Single-select for now
+  // (matches the user's ask — "generate eval for a specific agent").
+  const AGENT_OPTIONS: Array<{ id: string; label: string }> = [
+    { id: 'discovery',      label: 'Discovery' },
+    { id: 'payment',        label: 'Payment' },
+    { id: 'session',        label: 'Session' },
+    { id: 'support',        label: 'Support' },
+    { id: 'new-user',       label: 'New User' },
+    { id: 'session-flows',  label: 'Session Flows' },
+  ];
+  const [agentPick, setAgentPick] = useState<string>('discovery');
 
   if (!open) return null;
 
@@ -1429,10 +1440,11 @@ function RunConfigModal({
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2 block">
               Scope
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'mustPass', label: 'Must-pass only', sub: 'Fastest, gate-critical' },
-                { id: 'all',      label: 'All scenarios',  sub: 'Full health check' },
+                { id: 'mustPass', label: 'Must-pass', sub: 'CI gate · fastest' },
+                { id: 'all',      label: 'All',        sub: 'Full health check' },
+                { id: 'agent',    label: 'One agent',  sub: 'Pick below' },
               ].map(opt => (
                 <button
                   key={opt.id}
@@ -1448,6 +1460,41 @@ function RunConfigModal({
                 </button>
               ))}
             </div>
+
+            {/* Agent picker — only shown when scope = 'agent' */}
+            {scope === 'agent' && (
+              <div
+                className="mt-3 rounded-xl p-3"
+                style={{ background: '#F7F8FB', border: '1px solid #EEF0F5' }}
+              >
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                  Target agent
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {AGENT_OPTIONS.map((a) => {
+                    const active = agentPick === a.id;
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => setAgentPick(a.id)}
+                        className="py-2 rounded-lg text-[11.5px] font-bold transition"
+                        style={{
+                          background: active ? BRAND : '#fff',
+                          color: active ? '#fff' : '#475569',
+                          border: active ? '1px solid transparent' : '1px solid #EEF0F5',
+                          boxShadow: active ? '0 3px 10px rgba(249,115,22,0.24)' : 'none',
+                        }}
+                      >
+                        {a.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10.5px] text-slate-400 mt-2">
+                  Runs every evidence scenario whose agent matches the selected one.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* N selector */}
@@ -1508,11 +1555,17 @@ function RunConfigModal({
             Cancel
           </button>
           <button
-            onClick={() => { onStart({ n, scope, useLlm }); }}
+            onClick={() => {
+              const opts: EvalRunOptions = { n, scope, useLlm };
+              if (scope === 'agent') opts.agents = [agentPick];
+              onStart(opts);
+            }}
             className="px-5 py-2 text-[12.5px] font-bold text-white rounded-xl"
             style={{ background: BRAND, boxShadow: '0 6px 20px rgba(249,115,22,0.3)' }}
           >
-            Start run
+            {scope === 'agent'
+              ? `Start · ${AGENT_OPTIONS.find((a) => a.id === agentPick)?.label || agentPick}`
+              : 'Start run'}
           </button>
         </div>
       </div>
@@ -1533,8 +1586,29 @@ const EvalScoreView: React.FC = () => {
   const [configOpen, setConfigOpen] = useState(false);
   const [running,   setRunning]   = useState(false);
   const [progress,  setProgress]  = useState<{ done: number; total: number; scenario?: string } | null>(null);
+  // Tracks when the last SSE progress event arrived. Drives the "seems stuck"
+  // warning — if this stays static for >60s the UI shows a red banner so the
+  // user knows the pipeline is frozen rather than silently making no progress.
+  const [lastProgressAt, setLastProgressAt] = useState<number | null>(null);
+  const [stuckTick,      setStuckTick]      = useState(0);   // forces re-render each second while running
 
   const runEsRef = useRef<{ close: () => void } | null>(null);
+
+  // Heartbeat timer — ticks once per second while a run is active so the
+  // "stuck" banner updates without extra events from the server.
+  useEffect(() => {
+    if (!running) return;
+    const interval = window.setInterval(() => setStuckTick((t) => t + 1), 1000);
+    return () => window.clearInterval(interval);
+  }, [running]);
+
+  const secondsSinceProgress = lastProgressAt
+    ? Math.floor((Date.now() - lastProgressAt) / 1000)
+    : 0;
+  // Reference stuckTick so the computation re-runs each second (otherwise it
+  // would be stale between renders).
+  void stuckTick;
+  const isStuck = running && secondsSinceProgress >= 60;
 
   const load = async () => {
     setLoading(true);
@@ -1561,10 +1635,14 @@ const EvalScoreView: React.FC = () => {
     setConfigOpen(false);
     setRunning(true);
     setProgress({ done: 0, total: 0 });
+    setLastProgressAt(Date.now());
 
     try {
       const { es, close } = await startEvalRun(opts, {
         onEvent: (evt: EvalStreamEvent) => {
+          // Bump the "last progress" timestamp on any meaningful event so the
+          // "seems stuck" warning clears automatically when the pipeline catches up.
+          setLastProgressAt(Date.now());
           if (evt.type === 'start') {
             setProgress({ done: 0, total: evt.total });
           } else if (evt.type === 'scenario-start') {
@@ -1575,11 +1653,13 @@ const EvalScoreView: React.FC = () => {
             setReport(evt.report);
             setRunning(false);
             setProgress(null);
+            setLastProgressAt(null);
             load();
           } else if (evt.type === 'error') {
             setError(evt.message);
             setRunning(false);
             setProgress(null);
+            setLastProgressAt(null);
           }
         },
       });
@@ -1589,6 +1669,7 @@ const EvalScoreView: React.FC = () => {
       setError(e?.message || 'Failed to start run');
       setRunning(false);
       setProgress(null);
+      setLastProgressAt(null);
     }
   };
 
@@ -1674,26 +1755,62 @@ const EvalScoreView: React.FC = () => {
         {running && progress && (
           <div
             className="rounded-2xl p-4 flex items-center gap-4"
-            style={{ background: '#ffffff', border: BORDER, boxShadow: CARD_SHADOW }}
+            style={{
+              background: '#ffffff',
+              border: isStuck ? '1px solid rgba(239,68,68,0.45)' : BORDER,
+              boxShadow: CARD_SHADOW,
+            }}
           >
-            <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+            <Loader2
+              className="w-4 h-4 animate-spin"
+              style={{ color: isStuck ? '#ef4444' : '#F97316' }}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between text-[11.5px] font-bold text-slate-700">
                 <span>
                   Running {progress.total > 0 ? `${progress.done}/${progress.total}` : '…'}
                   {progress.scenario && <span className="text-slate-400 font-normal ml-2">· {progress.scenario}</span>}
+                  {lastProgressAt && (
+                    <span
+                      className="ml-2 text-[10.5px] font-semibold"
+                      style={{ color: isStuck ? '#b91c1c' : '#94a3b8' }}
+                    >
+                      · last update {secondsSinceProgress}s ago
+                    </span>
+                  )}
                 </span>
-                <button onClick={cancelRun} className="text-[11px] text-red-600 hover:underline">Cancel</button>
+                <button onClick={cancelRun} className="text-[11px] text-red-600 hover:underline">
+                  Cancel
+                </button>
               </div>
               <div className="h-1.5 mt-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 5}%`,
-                    background: BRAND,
+                    background: isStuck ? '#ef4444' : BRAND,
                   }}
                 />
               </div>
+
+              {/* Stuck warning — fires after 60s of silence from the SSE stream */}
+              {isStuck && (
+                <div className="mt-2 flex items-start gap-2 text-[11px]" style={{ color: '#991b1b' }}>
+                  <AlertTriangle style={{ width: 12, height: 12, marginTop: 1 }} />
+                  <div>
+                    No progress for {secondsSinceProgress}s — the agent may be
+                    slow, unreachable, or the pipeline has stalled.{' '}
+                    <button
+                      onClick={cancelRun}
+                      className="underline font-bold"
+                      style={{ color: '#b91c1c' }}
+                    >
+                      Cancel
+                    </button>{' '}
+                    and retry, or check the server terminal for errors.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

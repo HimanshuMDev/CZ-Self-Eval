@@ -92,16 +92,62 @@ function expectsBookingConfirmation(ev) {
 
 async function callAgent(payload, opts = {}) {
   const url = opts.url || DEFAULT_AGENT_URL;
+  // Per-call wall-clock cap. Prevents a slow / hung agent from wedging the
+  // whole eval run forever — the user will see a clear "timeout" error on
+  // that scenario, the pipeline moves on, and the run can still complete.
+  const timeoutMs = Math.max(5_000, Math.min(120_000, opts.timeoutMs || 45_000));
+  const maxRetries = Math.max(0, Math.min(3, opts.maxRetries ?? 1));
   const started = Date.now();
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+
+  // Retry loop: one retry by default on transient network errors (refused,
+  // DNS, 5xx, timeout on the first try). Doesn't retry on 4xx responses —
+  // those are deterministic.
+  let lastErr = null;
+  let res;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      // Retry on 5xx (transient server issue); don't retry on 4xx.
+      if (!res.ok && res.status >= 500 && attempt < maxRetries) {
+        lastErr = new Error(`Agent returned ${res.status} ${res.statusText}`);
+        await new Promise((r) => setTimeout(r, 500 + attempt * 500));
+        continue;
+      }
+      break;        // success OR non-retryable error
+    } catch (err) {
+      lastErr = err;
+      const cause = err?.cause?.code || err?.code || err?.name || err?.message || 'unknown';
+      const retryable = /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|UND_ERR_)/.test(cause)
+        || err?.name === 'TimeoutError'
+        || /aborted/i.test(String(err));
+      if (!retryable || attempt >= maxRetries) {
+        if (err?.name === 'TimeoutError' || /aborted/i.test(String(err))) {
+          throw new Error(`Agent call timed out after ${(timeoutMs / 1000).toFixed(0)}s — ${url}`);
+        }
+        throw new Error(`Could not reach agent at ${url} (${cause})`);
+      }
+      // Transient — exponential-ish backoff, 500ms / 1000ms
+      await new Promise((r) => setTimeout(r, 500 + attempt * 500));
+    }
+  }
+
+  if (!res) {
+    throw new Error(`Could not reach agent at ${url}: ${lastErr?.message || 'unknown error'}`);
+  }
+
   const responseTimeMs = Date.now() - started;
 
   if (!res.ok) {
-    throw new Error(`Agent returned ${res.status}: ${res.statusText}`);
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 200); } catch { /* ignore */ }
+    throw new Error(
+      `Agent at ${url} returned ${res.status} ${res.statusText}${detail ? ` — ${detail}` : ''}`,
+    );
   }
   const data = await res.json();
 

@@ -12,7 +12,7 @@
  *   (regenerate with `npm run eval:evidence` in the agent project, then
  *    re-copy — see self-eval/scripts/sync-agent-evidence.sh)
  */
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search,
   Filter,
@@ -22,8 +22,11 @@ import {
   Tag,
   FileCode2,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import agentEvidence from '../data/agentEvalEvidence.json';
+import GenerateEvidenceModal from './GenerateEvidenceModal';
+import { fetchUserEvidence, type UserEvidenceScenario } from '../api';
 
 // ─── Types (mirror the snapshot) ─────────────────────────────────────────────
 
@@ -183,10 +186,52 @@ const EvalEvidenceView: React.FC = () => {
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // User-authored evidence (from the local server) — layered on top of the
+  // bundled snapshot. Loaded async so the initial render never waits.
+  const [userEvidence, setUserEvidence] = useState<UserEvidenceScenario[]>([]);
+  const [genModalOpen, setGenModalOpen] = useState(false);
+
+  const loadUserEvidence = useCallback(async () => {
+    try {
+      const list = await fetchUserEvidence();
+      setUserEvidence(list);
+    } catch {
+      // If the local server is down, we silently fall back to only bundled
+      // evidence. The existing UI stays completely usable.
+      setUserEvidence([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUserEvidence();
+  }, [loadUserEvidence]);
+
+  // Merge bundled snapshot + user-authored evidence into one list.
+  // User evidence is appended at the end so the existing agent-repo scenarios
+  // keep their position/order; new ones show up at the bottom of their agent.
+  // De-duplicate by id — user overrides bundled if IDs collide.
+  const allEvidence = useMemo<EvalEvidenceEntry[]>(() => {
+    const userWrapped: EvalEvidenceEntry[] = userEvidence.map((u) => ({
+      id: u.id,
+      name: u.name,
+      agent: u.agent,
+      kind: u.kind,
+      tags: u.tags || [],
+      caseType: u.caseType,
+      evalType: u.evalType,
+      source: u.source || 'user-generated',
+      task: u.task as unknown as Record<string, unknown>,
+    }));
+    const byId = new Map<string, EvalEvidenceEntry>();
+    for (const e of SNAPSHOT.evidence) byId.set(e.id, e);
+    for (const u of userWrapped) byId.set(u.id, u);
+    return Array.from(byId.values());
+  }, [userEvidence]);
+
   // ── Filter pipeline ────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SNAPSHOT.evidence.filter((e) => {
+    return allEvidence.filter((e) => {
       if (agentFilter !== 'all' && e.agent !== agentFilter) return false;
       if (caseTypeFilter !== 'all' && e.caseType !== caseTypeFilter) return false;
       if (evalTypeFilter !== 'all' && e.evalType !== evalTypeFilter) return false;
@@ -197,7 +242,7 @@ const EvalEvidenceView: React.FC = () => {
       }
       return true;
     });
-  }, [query, agentFilter, caseTypeFilter, evalTypeFilter, kindFilter]);
+  }, [query, agentFilter, caseTypeFilter, evalTypeFilter, kindFilter, allEvidence]);
 
   const grouped = useMemo(() => {
     const g = new Map<string, EvalEvidenceEntry[]>();
@@ -210,23 +255,24 @@ const EvalEvidenceView: React.FC = () => {
   }, [filtered]);
 
   const selected = useMemo(
-    () => SNAPSHOT.evidence.find((e) => e.id === selectedId) ?? null,
-    [selectedId],
+    () => allEvidence.find((e) => e.id === selectedId) ?? null,
+    [selectedId, allEvidence],
   );
 
-  // Unique values for dropdown filters
+  // Unique values for dropdown filters — include user evidence so new tags /
+  // case-types / eval-types show up as filter options.
   const allCaseTypes = useMemo(
     () =>
-      Array.from(new Set(SNAPSHOT.evidence.map((e) => e.caseType).filter(Boolean))) as string[],
-    [],
+      Array.from(new Set(allEvidence.map((e) => e.caseType).filter(Boolean))) as string[],
+    [allEvidence],
   );
   const allEvalTypes = useMemo(
     () =>
-      Array.from(new Set(SNAPSHOT.evidence.map((e) => e.evalType).filter(Boolean))) as string[],
-    [],
+      Array.from(new Set(allEvidence.map((e) => e.evalType).filter(Boolean))) as string[],
+    [allEvidence],
   );
 
-  const filteredIsAll = filtered.length === SNAPSHOT.evidence.length;
+  const filteredIsAll = filtered.length === allEvidence.length;
 
   return (
     <div className="flex-1 overflow-hidden flex" style={{ background: '#F7F8FB' }}>
@@ -236,17 +282,21 @@ const EvalEvidenceView: React.FC = () => {
         <div className="grid grid-cols-4 gap-4">
           <StatCard
             label="Total Evidence"
-            value={SNAPSHOT.summary.total}
-            hint={`across ${SNAPSHOT.agents.length} agents`}
+            value={allEvidence.length}
+            hint={
+              userEvidence.length > 0
+                ? `${SNAPSHOT.summary.total} bundled + ${userEvidence.length} user-generated`
+                : `across ${SNAPSHOT.agents.length} agents`
+            }
           />
           <StatCard
             label="Single-Turn"
-            value={SNAPSHOT.summary.byKind.single}
+            value={allEvidence.filter((e) => e.kind === 'single').length}
             hint="code-graded + rubric"
           />
           <StatCard
             label="Multi-Turn Flows"
-            value={SNAPSHOT.summary.byKind.flow}
+            value={allEvidence.filter((e) => e.kind === 'flow').length}
             hint="stateful scenarios"
           />
           <StatCard
@@ -334,12 +384,27 @@ const EvalEvidenceView: React.FC = () => {
             ]}
           />
 
-          {/* Subtle note — runs live in the Eval Score tab */}
+          {/* Generate Evidence — mine real chat sessions with AI */}
+          <button
+            onClick={() => setGenModalOpen(true)}
+            className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold text-white transition-transform hover:scale-[1.02] active:scale-100"
+            style={{
+              background: 'linear-gradient(135deg, #F97316 0%, #fb923c 100%)',
+              boxShadow: '0 4px 14px rgba(249,115,22,0.3)',
+              letterSpacing: '-0.01em',
+            }}
+            title="Mine chat sessions with AI to generate new regression scenarios"
+          >
+            <Sparkles style={{ width: 13, height: 13 }} />
+            Generate Evidence
+          </button>
+
+          {/* Count note */}
           <span
-            className="text-[10.5px] font-semibold ml-auto"
+            className="text-[10.5px] font-semibold"
             style={{ color: '#94a3b8', letterSpacing: '0.02em' }}
           >
-            {filteredIsAll ? `${filtered.length} cases` : `${filtered.length} / ${SNAPSHOT.evidence.length} cases`}
+            {filteredIsAll ? `${filtered.length} cases` : `${filtered.length} / ${allEvidence.length} cases`}
           </span>
         </div>
 
@@ -377,6 +442,17 @@ const EvalEvidenceView: React.FC = () => {
           onClose={() => setSelectedId(null)}
         />
       )}
+
+      {/* AI-powered Generate Evidence modal — mines chats to create new scenarios */}
+      <GenerateEvidenceModal
+        open={genModalOpen}
+        onClose={() => setGenModalOpen(false)}
+        onSaved={() => {
+          // Refresh the user-evidence list so the new scenarios appear
+          // in the group list immediately.
+          loadUserEvidence();
+        }}
+      />
     </div>
   );
 };

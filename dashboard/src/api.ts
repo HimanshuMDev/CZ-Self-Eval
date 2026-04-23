@@ -217,6 +217,134 @@ export const deleteChatSession = async (id: string) => {
 
 const LOCAL_API = '/api';
 
+// ─── Eval Evidence — user-authored ("Generate Evidence" feature) ──────────
+//
+// The dashboard-bundled JSON (`agentEvalEvidence.json`) stays as the baseline
+// dataset — 230 scenarios synced from the agent repo. On top of that, users
+// can mine their own chat sessions with AI to produce extra regression
+// scenarios. Those live on the local server under /api/eval-evidence/user
+// and are merged into the Eval Evidence view at runtime.
+
+export interface UserEvidenceScenario {
+  id: string;
+  name: string;
+  agent: string;
+  kind: 'single' | 'flow';
+  tags: string[];
+  caseType?: string;
+  evalType?: string;
+  source?: string;
+  createdAt?: string;
+  origin?: {
+    kind: string;
+    sessionIds?: string[];
+    llmBackend?: string;
+  };
+  task: {
+    id: string;
+    name: string;
+    description?: string;
+    tags: string[];
+    caseType?: string;
+    evalType?: string;
+    input: {
+      userMessage: string;
+      userId: string;
+      channel: string;
+      [k: string]: unknown;
+    };
+    codeGradedCriteria?: {
+      expectedAgentType?: string;
+      responseMustBeNonEmpty?: boolean;
+      responseMustContainOneOf?: string[];
+      responseMustNotContain?: string[];
+    };
+    modelGradedRubric?: {
+      passingScore?: number;
+      criteria?: string[];
+    };
+  };
+}
+
+export interface GenerateEvidenceMeta {
+  sessionCount: number;
+  count: number;
+  backend: 'anthropic' | 'openai' | 'gemini' | 'heuristic-fallback' | 'none';
+  backendError?: string | null;
+  generatedAt: string;
+}
+
+/**
+ * Chat sessions — local-server flavour for mining into eval evidence.
+ * Hits `/api/arena/chat-sessions` which the Vite dev proxy rewrites to
+ * `localhost:4001/api/sessions`.
+ */
+export const fetchLocalChatSessions = async (): Promise<Array<Omit<ChatSession, 'messages'>>> => {
+  const res = await fetch(`/api/arena/chat-sessions`);
+  if (!res.ok) throw new Error(`Failed to fetch chat sessions (${res.status})`);
+  const data = await res.json();
+  const list = Array.isArray(data) ? data : (data.sessions ?? []);
+  return list as Array<Omit<ChatSession, 'messages'>>;
+};
+
+export const fetchUserEvidence = async (): Promise<UserEvidenceScenario[]> => {
+  const res = await fetch(`${LOCAL_API}/eval-evidence/user`);
+  if (!res.ok) throw new Error(`Failed to fetch user evidence (${res.status})`);
+  const data = await res.json();
+  return (data.scenarios ?? []) as UserEvidenceScenario[];
+};
+
+export const generateEvidenceFromSessions = async (
+  sessionIds: string[],
+  count = 5,
+  useLlm = true,
+): Promise<{ candidates: UserEvidenceScenario[]; meta: GenerateEvidenceMeta }> => {
+  const res = await fetch(`${LOCAL_API}/eval-evidence/generate`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sessionIds, count, useLlm }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Generate failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+  return res.json();
+};
+
+export const saveUserEvidenceBatch = async (
+  scenarios: UserEvidenceScenario[],
+): Promise<{ ok: boolean; addedCount: number; skipped: number; added: UserEvidenceScenario[] }> => {
+  const res = await fetch(`${LOCAL_API}/eval-evidence/user/batch`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ scenarios }),
+  });
+  if (!res.ok) throw new Error(`Save batch failed (${res.status})`);
+  return res.json();
+};
+
+export const updateUserEvidence = async (
+  id: string,
+  patch: Partial<UserEvidenceScenario>,
+): Promise<UserEvidenceScenario> => {
+  const res = await fetch(`${LOCAL_API}/eval-evidence/user/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`Update failed (${res.status})`);
+  const data = await res.json();
+  return data.scenario;
+};
+
+export const deleteUserEvidence = async (id: string): Promise<void> => {
+  const res = await fetch(`${LOCAL_API}/eval-evidence/user/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+};
+
+
 export interface EvalResultRecord {
   scenarioId: string;
   scenarioName: string;
@@ -701,10 +829,14 @@ export type EvalStreamEvent =
 
 export interface EvalRunOptions {
   n?: number;
-  scope?: 'mustPass' | 'all' | 'tag';
+  scope?: 'mustPass' | 'all' | 'tag' | 'agent';
   tags?: string[];
+  /** Limit to one or more sub-agents — used with scope='agent' or as a filter on 'all'. */
+  agents?: string[];
   useLlm?: boolean;
   agentUrl?: string;
+  /** Optional hard cap on scenarios processed — handy for quick smoke runs. */
+  limit?: number;
 }
 
 export const fetchLatestEvalScore = async (): Promise<EvalScoreReport> => {
