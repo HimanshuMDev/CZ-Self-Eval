@@ -34,7 +34,7 @@ const mongoose = require('mongoose');
 const { randomUUID } = require('crypto');
 
 const { getScenarios, getMeta } = require('./eval-evidence');
-const { toScoringScenario, runScenarioOnce } = require('./evidence-runner');
+const { toScoringScenario, runScenarioOnce, getLlmVerdict } = require('./evidence-runner');
 const { judgeReply } = require('./judge');
 const { scoreScenario, computeCzScore } = require('./score');
 const { THRESHOLDS } = require('./rubric');
@@ -281,7 +281,9 @@ async function executeRun(runId, opts) {
           }
 
           let judge = null;
+          let llmVerdict = null;
           if (!r.error) {
+            // 1. Rubric judge (3-persona ensemble, 5-dim scores)
             try {
               judge = await judgeReply({
                 text: r.responseText,
@@ -292,6 +294,22 @@ async function executeRun(runId, opts) {
             } catch (err) {
               judge = { overall: 5, agreement: 1, perDim: {}, judges: [], error: err.message };
             }
+
+            // 2. Structured AI verdict (pass/fail + reasoning + issues).
+            //    Runs whenever useLlm is on — this is what the user sees on
+            //    each scenario card as "AI says: pass / partial / fail".
+            if (useLlm) {
+              try {
+                llmVerdict = await getLlmVerdict({
+                  scenario,
+                  agentReply: r.responseText,
+                  observedSubAgent: r.agentType,
+                  codeGraded: { pass: r.pass, score: r.score, reason: r.reason },
+                });
+              } catch (err) {
+                llmVerdict = { available: false, backendError: err.message };
+              }
+            }
           }
 
           const instr = instrumentRun(
@@ -299,15 +317,33 @@ async function executeRun(runId, opts) {
             scenario,
           );
 
+          // Authoritative pass/fail policy:
+          //   - If AI verdict is available AND confident (>= 0.6), it takes
+          //     precedence over the regex check. The regex still runs and is
+          //     recorded for transparency, but the AI gets the final call —
+          //     which fixes the common case where responseMustContainOneOf
+          //     is empty and the regex check was a coin flip.
+          //   - If AI verdict is unavailable or low-confidence, fall back to
+          //     the original regex-based pass.
+          let finalPass = r.pass;
+          let finalReason = r.reason;
+          if (llmVerdict?.available && llmVerdict.confidence >= 0.6) {
+            finalPass = llmVerdict.pass;
+            finalReason = `AI verdict (${llmVerdict.verdict}, conf ${llmVerdict.confidence.toFixed(2)}): ${llmVerdict.reasoning}`;
+          }
+
           runs.push({
-            pass: r.pass,
-            score: r.score,
-            reason: r.reason,
-            responseText: r.responseText,
-            agentType: r.agentType,
+            pass:           finalPass,
+            score:          r.score,
+            reason:         finalReason,
+            codeGradedPass: r.pass,                  // regex result kept for transparency
+            codeGradedReason: r.reason,
+            responseText:   r.responseText,
+            agentType:      r.agentType,
             responseTimeMs: r.responseTimeMs,
-            turnResults: r.turnResults || null,
+            turnResults:    r.turnResults || null,
             judge,
+            llmVerdict,                              // full AI verdict blob: pass, confidence, reasoning, issues
             ...instr,
           });
         }
@@ -723,6 +759,13 @@ function createEvalRunsRouter() {
     try {
       const b = req.body || {};
       const runId = randomUUID();
+      // LLM judge default: on whenever ANY provider key is present. The
+      // client can still force it off by explicitly sending useLlm:false —
+      // but "I set a key and it still uses heuristic" won't happen.
+      const hasLlmKey =
+        !!(process.env.ANTHROPIC_API_KEY ||
+           process.env.OPENAI_API_KEY ||
+           process.env.GEMINI_API_KEY);
       const opts = {
         n:         Math.max(1, Math.min(10, parseInt(b.n, 10) || 3)),
         scope:     ['all', 'tag', 'agent', 'mustPass'].includes(b.scope) ? b.scope : 'mustPass',
@@ -732,9 +775,12 @@ function createEvalRunsRouter() {
         evalTypes: Array.isArray(b.evalTypes) ? b.evalTypes : null,
         kinds:     Array.isArray(b.kinds)     ? b.kinds     : null,
         limit:     typeof b.limit === 'number' && b.limit > 0 ? Math.floor(b.limit) : null,
-        useLlm:    !!b.useLlm,
+        useLlm:    b.useLlm === false ? false : (b.useLlm === true || hasLlmKey),
         agentUrl:  b.agentUrl,
       };
+      console.log(
+        `[eval] run ${runId.slice(0, 8)} scope=${opts.scope} n=${opts.n} useLlm=${opts.useLlm}${opts.agents ? ` agents=${opts.agents.join(',')}` : ''}`,
+      );
       JOBS.set(runId, { events: [], subscribers: new Set(), done: false });
       // Fire-and-forget — progress is surfaced through SSE. We also wrap the
       // whole run in a wall-clock timeout so it can never hang silently: if

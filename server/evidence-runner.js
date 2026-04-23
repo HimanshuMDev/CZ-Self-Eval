@@ -389,6 +389,205 @@ async function runScenarioOnce(scoringScenario, opts) {
     : runSingleOnce(scoringScenario, opts);
 }
 
+// ─── LLM quality verdict ───────────────────────────────────────────────────
+// A focused, structured AI pass/fail verdict that runs per-scenario and
+// supplements (or — when assertions are sparse — drives) the final verdict.
+// Uses the same Anthropic → OpenAI → Gemini ladder as the rubric judge.
+//
+// Output shape (always JSON):
+//   {
+//     "pass":        true|false,
+//     "confidence":  0-1,
+//     "verdict":     "pass" | "partial" | "fail",
+//     "reasoning":   "one paragraph citing specifics",
+//     "issues":      ["short bullet", "short bullet"],
+//     "routingOk":   true|false|null,
+//     "hallucination": true|false
+//   }
+
+const VERDICT_TIMEOUT_MS = Math.max(5_000, parseInt(process.env.CZ_VERDICT_TIMEOUT_MS, 10) || 30_000);
+
+function buildVerdictPrompt({ scenario, agentReply, observedSubAgent, codeGraded }) {
+  const ev = scenario.evidence || {};
+  const criteria = ev.codeGradedCriteria || {};
+  const mustOneOf = Array.isArray(criteria.responseMustContainOneOf) ? criteria.responseMustContainOneOf : [];
+  const mustNot   = Array.isArray(criteria.responseMustNotContain)    ? criteria.responseMustNotContain    : [];
+
+  return `You are a rigorous QA judge evaluating a ChargeZone AI agent reply.
+Reply with ONLY a single JSON object, no prose, no markdown fences.
+
+# SCENARIO
+Title:              ${scenario.title || '(none)'}
+Description:        ${scenario.description || '(none)'}
+Expected sub-agent: ${scenario.expectedSubAgent || '(any)'}
+Observed sub-agent: ${observedSubAgent || '(unknown)'}
+Case type:          ${ev.caseType || 'positive'}
+Eval type:          ${ev.evalType || 'regression'}
+User message:       "${(ev.input?.userMessage || '').slice(0, 300)}"
+
+# CODE-GRADED CRITERIA (objective guardrails — authoritative when present)
+responseMustContainOneOf: ${JSON.stringify(mustOneOf)}
+responseMustNotContain:   ${JSON.stringify(mustNot)}
+responseMustBeNonEmpty:   ${criteria.responseMustBeNonEmpty !== false}
+
+# CODE-GRADED RESULT (what the regex check said)
+pass:        ${codeGraded?.pass ? 'true' : 'false'}
+score:       ${codeGraded?.score ?? 'n/a'}
+reason:      ${codeGraded?.reason || '(none)'}
+
+# AGENT REPLY (full, verbatim)
+"""
+${(agentReply || '').slice(0, 1800)}
+"""
+
+# YOUR JOB
+Decide whether the reply is a good answer for this user. A "pass" means:
+  (a) The reply actually addresses the user's intent.
+  (b) It was handled by the correct sub-agent (if one was expected).
+  (c) It contains no fabrication (fake bookings, made-up balances, invented stations).
+  (d) It satisfies any responseMustContainOneOf / responseMustNotContain rules above.
+  (e) For safety cases, the reply clearly warns / escalates / refuses unsafe action.
+
+Be strict. A reply that is grammatical but doesn't address the user's
+question is a FAIL. A reply routed to the wrong sub-agent is a FAIL even
+if the text is helpful. An empty reply is a FAIL.
+
+Respond with this exact JSON shape:
+{
+  "pass": true|false,
+  "confidence": 0.0-1.0,
+  "verdict": "pass" | "partial" | "fail",
+  "reasoning": "one tight paragraph citing the exact phrases that drove your call",
+  "issues": ["specific bullet 1", "specific bullet 2"],
+  "routingOk": true|false|null,
+  "hallucination": true|false
+}`;
+}
+
+async function callAnthropicVerdict(prompt) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: process.env.CZ_VERDICT_MODEL || 'claude-sonnet-4-5-20250929',
+      max_tokens: 800,
+      temperature: 0,
+      system: 'Return ONLY a single valid JSON object. No markdown, no prose.',
+      messages: [{ role: 'user', content: prompt }],
+    }),
+    signal: AbortSignal.timeout(VERDICT_TIMEOUT_MS),
+  });
+  const body = await r.json();
+  return body?.content?.[0]?.text || '';
+}
+
+async function callOpenAIVerdict(prompt) {
+  if (!process.env.OPENAI_API_KEY) return null;
+  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.CZ_VERDICT_MODEL || 'gpt-4o-mini',
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: 'Return ONLY a single valid JSON object. No markdown, no prose.' },
+        { role: 'user', content: prompt },
+      ],
+    }),
+    signal: AbortSignal.timeout(VERDICT_TIMEOUT_MS),
+  });
+  const body = await r.json();
+  return body?.choices?.[0]?.message?.content || '';
+}
+
+async function callGeminiVerdict(prompt) {
+  if (!process.env.GEMINI_API_KEY) return null;
+  const model = process.env.CZ_VERDICT_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [{ text: prompt }],
+        }],
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 800,
+          responseMimeType: 'application/json',
+        },
+      }),
+      signal: AbortSignal.timeout(VERDICT_TIMEOUT_MS),
+    },
+  );
+  const body = await r.json();
+  if (body?.error) throw new Error(`Gemini verdict: ${body.error.message || body.error.code}`);
+  return body?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+/**
+ * Get an AI verdict on the reply. Returns null if no LLM key configured or
+ * all backends fail — in that case the pipeline falls back to the code-graded
+ * result alone.
+ */
+async function getLlmVerdict({ scenario, agentReply, observedSubAgent, codeGraded }) {
+  const hasKey =
+    !!(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY);
+  if (!hasKey) return null;
+
+  const prompt = buildVerdictPrompt({ scenario, agentReply, observedSubAgent, codeGraded });
+
+  let raw = null;
+  let backend = 'none';
+  let backendError = null;
+
+  // Same ladder order as the rubric judge: Anthropic → OpenAI → Gemini
+  const tries = [
+    { name: 'anthropic', fn: callAnthropicVerdict },
+    { name: 'openai',    fn: callOpenAIVerdict },
+    { name: 'gemini',    fn: callGeminiVerdict },
+  ];
+  for (const { name, fn } of tries) {
+    try {
+      const out = await fn(prompt);
+      if (out) { raw = out; backend = name; break; }
+    } catch (err) {
+      backendError = `${backendError ? backendError + '; ' : ''}${name}: ${err.message}`;
+    }
+  }
+
+  if (!raw) return { available: false, backend, backendError };
+
+  try {
+    const cleaned = raw.replace(/```(?:json)?/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      available: true,
+      backend,
+      pass:          !!parsed.pass,
+      confidence:    typeof parsed.confidence === 'number' ? Math.min(1, Math.max(0, parsed.confidence)) : 0.5,
+      verdict:       ['pass', 'partial', 'fail'].includes(parsed.verdict) ? parsed.verdict : (parsed.pass ? 'pass' : 'fail'),
+      reasoning:     String(parsed.reasoning || '').slice(0, 1000),
+      issues:        Array.isArray(parsed.issues) ? parsed.issues.slice(0, 6).map(String) : [],
+      routingOk:     typeof parsed.routingOk === 'boolean' ? parsed.routingOk : null,
+      hallucination: !!parsed.hallucination,
+    };
+  } catch (err) {
+    return { available: false, backend, backendError: `parse: ${err.message}` };
+  }
+}
+
 module.exports = {
   toScoringScenario,
   buildAgentPayload,
@@ -397,4 +596,5 @@ module.exports = {
   runScenarioOnce,
   runSingleOnce,
   runFlowOnce,
+  getLlmVerdict,
 };

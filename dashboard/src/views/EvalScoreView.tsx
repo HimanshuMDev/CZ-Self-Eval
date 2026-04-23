@@ -2064,7 +2064,7 @@ const EvalScoreView: React.FC = () => {
         open={configOpen}
         onClose={() => setConfigOpen(false)}
         onStart={handleStart}
-        defaults={{ n: 3, scope: 'mustPass', useLlm: false }}
+        defaults={{ n: 3, scope: 'mustPass', useLlm: true }}
       />
     </div>
   );
